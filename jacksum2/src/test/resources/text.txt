@@ -1,0 +1,1 @@
+7zr a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on xp64.7z Windows_XP_SP2_AMD64
