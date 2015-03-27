@@ -20,12 +20,13 @@ package jonelo.jacksum.concurrent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import jonelo.jacksum.algorithm.AbstractChecksum;
+import jonelo.jacksum.cli.JacksumHelp;
+import jonelo.jacksum.ui.ExitStatus;
+import jonelo.sugar.util.ExitException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.OptionHandlerFilter;
 
 /**
  *
@@ -40,7 +41,7 @@ public class Jacksum2Cli {
     private boolean alternate = false;
 
     @Option(name = "-c", metaVar = "list")
-    private String checkFile = null;
+    private File checkFile = null;
 
     @Option(name = "-d")
     private boolean ignoreSymbolicLinksToDirectories = false;
@@ -49,7 +50,7 @@ public class Jacksum2Cli {
     private String expectedHashValue = null;
 
     @Option(name = "-E", metaVar = "encoding")
-    private String encoding = AbstractChecksum.HEX;
+    private Encoding encoding = Encoding.HEX;
 
     @Option(name = "-f")
     private boolean processFilesOnly = false;
@@ -57,7 +58,7 @@ public class Jacksum2Cli {
     @Option(name = "-F", metaVar = "format")
     private String format = null;
 
-    @Option(name = "-g", metaVar = "count")
+    @Option(name = "-g", metaVar = "count", depends = {"-x", "-X", "-E"})
     private int hexaGroupSize = -1;
 
     @Option(name = "-G", metaVar = "separatorChar", depends = {"-g"})
@@ -70,13 +71,13 @@ public class Jacksum2Cli {
     private boolean fullPath = false;
 
     @Option(name = "-o", metaVar = "file", forbids = {"-O"})
-    private String outputFile = null;
+    private File outputFile = null;
 
     @Option(name = "-O", metaVar = "file", forbids = {"-o"})
-    private String overwriteOutputFile = null;
+    private File overwriteOutputFile = null;
 
     @Option(name = "-I", metaVar = "string")
-    private String prefixToIngonreInFilenames = null;
+    private String prefixToIgnoreInFilenames = null;
 
     @Option(name = "-l", depends = {"-c"})
     private boolean onlyListModifiedFiles = false;
@@ -101,13 +102,13 @@ public class Jacksum2Cli {
     private boolean summary;
 
     @Option(name = "-t", metaVar = "form")
-    private String dateFormat;
+    private String dateFormat = "yyyyMMddHHmmss";
 
     @Option(name = "-u", metaVar = "file")
-    private String errorFileName;
+    private File errorFileName;
 
     @Option(name = "-U", metaVar = "file")
-    private String overwriteErrorFileName;
+    private File overwriteErrorFileName;
 
     @Option(name = "-v")
     private boolean showVersion;
@@ -119,7 +120,7 @@ public class Jacksum2Cli {
     private boolean fileParamIsDirAndWorkingDirectory;
 
     @Option(name = "-x", forbids = {"-E", "-X"})
-    private boolean lowerHexaFormat;
+    private boolean lowerHexaFormat = true;
 
     @Option(name = "-X", forbids = {"-E", "-x"})
     private boolean upperHexaFormat;
@@ -128,35 +129,152 @@ public class Jacksum2Cli {
     private List<String> filenames = new ArrayList<>();
 
     public static void main(String[] args) {
-        new Jacksum2Cli().doMain(args);
+        try {
+            new Jacksum2Cli().doMain(args);
+        } catch (CmdLineException e) {
+            if (e.getMessage() != null) {
+                System.err.println(e.getMessage());
+            }
+            System.exit(ExitStatus.PARAMETER);
+        }
     }
 
-    public void doMain(String[] args) {
+    public void doMain(String[] args) throws CmdLineException {
         CmdLineParser parser = new CmdLineParser(this);
 
-        try {
             // parse the arguments.
             parser.parseArgument(args);
             // you can parse additional arguments if you want.
             // parser.parseArgument("more","args");
             // after parsing arguments, you should check
             // if enough arguments are given.
-            if (filenames.isEmpty()) {
-                throw new CmdLineException(parser, "No argument is given");
-            }
-        } catch (CmdLineException e) {
-            // if there's a problem in the command line,
-            // you'll get this exception. this will report
-            // an error message.
-            System.err.println(e.getMessage());
-            System.err.println("java SampleMain [options...] arguments...");
-            // print the list of available options
-            parser.printUsage(System.err);
-            System.err.println();
-            // print option sample. This is useful some time
-            System.err.println(" Example: java SampleMain" + parser.printExample(OptionHandlerFilter.ALL));
-
-        }
 
     }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public boolean isAlternate() {
+        return alternate;
+    }
+
+    public File getCheckFile() {
+        return checkFile;
+    }
+
+    public boolean isIgnoreSymbolicLinksToDirectories() {
+        return ignoreSymbolicLinksToDirectories;
+    }
+
+    public String getExpectedHashValue() {
+        return expectedHashValue;
+    }
+
+    public Encoding getEncoding() {
+        return encoding;
+    }
+
+    public boolean isProcessFilesOnly() {
+        return processFilesOnly;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public int getHexaGroupSize() {
+        return hexaGroupSize;
+    }
+
+    public Character getHexaGroupSeparatorChar() {
+        return hexaGroupSeparatorChar;
+    }
+
+    public boolean isHelp() {
+        return help;
+    }
+
+    public boolean isFullPath() {
+        return fullPath;
+    }
+
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public File getOverwriteOutputFile() {
+        return overwriteOutputFile;
+    }
+
+    public String getPrefixToIgnoreInFilenames() {
+        return prefixToIgnoreInFilenames;
+    }
+
+    public boolean isOnlyListModifiedFiles() {
+        return onlyListModifiedFiles;
+    }
+
+    public boolean isPrintMetainfo() {
+        return printMetainfo;
+    }
+
+    public char getPathSeparator() {
+        return pathSeparator;
+    }
+
+    public String getQuickSequence() {
+        return quickSequence;
+    }
+
+    public boolean isRecursive() {
+        return recursive;
+    }
+
+    public String getCustomSeparator() {
+        return customSeparator;
+    }
+
+    public boolean isSummary() {
+        return summary;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public File getErrorFileName() {
+        return errorFileName;
+    }
+
+    public File getOverwriteErrorFileName() {
+        return overwriteErrorFileName;
+    }
+
+    public boolean isShowVersion() {
+        return showVersion;
+    }
+
+    public String getVerbosity() {
+        return verbosity;
+    }
+
+    public boolean isFileParamIsDirAndWorkingDirectory() {
+        return fileParamIsDirAndWorkingDirectory;
+    }
+
+    public boolean isLowerHexaFormat() {
+        return lowerHexaFormat;
+    }
+
+    public boolean isUpperHexaFormat() {
+        return upperHexaFormat;
+    }
+
+    public List<String> getFilenames() {
+        return filenames;
+    }
+    
+    
+    
 }
