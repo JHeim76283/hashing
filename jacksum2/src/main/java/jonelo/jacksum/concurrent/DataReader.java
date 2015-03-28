@@ -53,9 +53,8 @@ public class DataReader implements Runnable {
 
     @Override
     public void run() {
-        InputStream is = null;
-        try {
-            is = new BufferedInputStream(new FileInputStream(this.file));
+
+        try(InputStream is = new BufferedInputStream(new FileInputStream(this.file))) {
 
             DataUnit du = new DataUnit(AbstractChecksum.BUFFERSIZE);
             int read = du.readData(is);
@@ -73,14 +72,6 @@ public class DataReader implements Runnable {
 
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(ConcurrentHasher.class.getName()).throwing("DataReader", "run", ex);
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(ConcurrentHasher.class.getName()).throwing("DataReader", "run", ex);
-                }
-            }
         }
     }
 }

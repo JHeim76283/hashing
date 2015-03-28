@@ -245,7 +245,7 @@ abstract public class AbstractChecksum implements Checksum {
     }
 
     // with this method, the format() method can be customized
-    public void firstFormat(StringBuilder format) {
+    protected void firstFormat(StringBuilder format) {
         // checksum
         GeneralString.replaceAllStrings(format, "#FINGERPRINT", "#CHECKSUM");
     }

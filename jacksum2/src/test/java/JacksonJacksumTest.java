@@ -60,6 +60,10 @@ public class JacksonJacksumTest {
 
         IMAGE_FILE_RESULTS = list.stream().collect(Collectors.toMap(HashResultHolder::getAlgorithm, Function.identity()));
 
+        /*Map<String, String> map = JacksumAPI.getAvailableAlgorithms();
+        map.keySet().stream()
+                .forEach(cannonicalName -> System.out.println(cannonicalName.toUpperCase()+"(\""+map.get(cannonicalName)+"\",\""+cannonicalName+"\", \"alias\"),"));
+        */
         /*JacksumAPI.getAvailableAlgorithms().keySet().stream()
                 .forEach(name -> System.out.println("@Benchmark @BenchmarkMode(Mode.AverageTime) @OutputTimeUnit(TimeUnit.MILLISECONDS)  public String "+name+"FileAlt() {return this.getFileHashValue(this.getChecksum(\""+name+"\", true), FILE);}"));
 */        

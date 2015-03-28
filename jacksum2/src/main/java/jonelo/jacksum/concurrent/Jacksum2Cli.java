@@ -18,9 +18,14 @@
 package jonelo.jacksum.concurrent;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import jonelo.jacksum.cli.JacksumHelp;
+import java.util.ResourceBundle;
+import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.ui.ExitStatus;
 import jonelo.sugar.util.ExitException;
 import org.kohsuke.args4j.Argument;
@@ -34,8 +39,11 @@ import org.kohsuke.args4j.Option;
  */
 public class Jacksum2Cli {
 
-    @Option(name = "-a", metaVar = "algo")
-    private String algorithm = "sha1";
+    private PrintStream out = System.out;
+    private PrintStream err = System.err;
+    
+    @Option(name = "-a", handler = AlgorithmHandler.class, metaVar = "algo")
+    private Algorithm algorithm = Algorithm.SHA1;
 
     @Option(name = "-A")
     private boolean alternate = false;
@@ -58,13 +66,17 @@ public class Jacksum2Cli {
     @Option(name = "-F", metaVar = "format")
     private String format = null;
 
-    @Option(name = "-g", metaVar = "count", depends = {"-x", "-X", "-E"})
+    @Option(name = "-g", metaVar = "count")
     private int hexaGroupSize = -1;
 
     @Option(name = "-G", metaVar = "separatorChar", depends = {"-g"})
     private Character hexaGroupSeparatorChar = null;
 
-    @Option(name = "-h")
+    @Option(name = "-h", forbids = {
+        "-a", "-A", "-c", "-d",
+        "-e", "-E", "-f", "-g", "-G", "-p", "-o", "-O",
+        "-I", "-l", "-m", "-P", "-q", "-r", "-s", "-S",
+        "-t", "-u", "-U", "-v", "-V", "-w", "-x", "-X"})
     private boolean help = false;
 
     @Option(name = "-p")
@@ -82,7 +94,7 @@ public class Jacksum2Cli {
     @Option(name = "-l", depends = {"-c"})
     private boolean onlyListModifiedFiles = false;
 
-    @Option(name = "-m")
+    @Option(name = "-m", forbids = {"-F"})
     private boolean printMetainfo;
 
     @Option(name = "-P", metaVar = "char")
@@ -131,27 +143,29 @@ public class Jacksum2Cli {
     public static void main(String[] args) {
         try {
             new Jacksum2Cli().doMain(args);
-        } catch (CmdLineException e) {
-            if (e.getMessage() != null) {
-                System.err.println(e.getMessage());
-            }
+        } catch (CmdLineException | ExitException e) {
+            System.err.println(e.getMessage());
             System.exit(ExitStatus.PARAMETER);
         }
     }
 
-    public void doMain(String[] args) throws CmdLineException {
+    public void doMain(String[] args) throws CmdLineException, ExitException {
         CmdLineParser parser = new CmdLineParser(this);
 
-            // parse the arguments.
-            parser.parseArgument(args);
+        // parse the arguments.
+        parser.parseArgument(args);
             // you can parse additional arguments if you want.
-            // parser.parseArgument("more","args");
-            // after parsing arguments, you should check
-            // if enough arguments are given.
+        // parser.parseArgument("more","args");
+        // after parsing arguments, you should check
+        // if enough arguments are given.
+
+        if (this.isHelp()) {
+            this.printHelp();
+        }
 
     }
 
-    public String getAlgorithm() {
+    public Algorithm getAlgorithm() {
         return algorithm;
     }
 
@@ -274,7 +288,25 @@ public class Jacksum2Cli {
     public List<String> getFilenames() {
         return filenames;
     }
-    
-    
+
+    private void printHelp() throws ExitException {
+        try (InputStream helpTextStream = Jacksum2Cli.class.getResourceAsStream(ResourceBundle.getBundle("resources").getString("help_file"))) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = helpTextStream.read(buffer)) > 0) {
+                this.out.write(buffer, 0, read);
+            }
+        } catch (IOException ex) {
+            throw new ExitException(ex.getMessage(), ExitStatus.IO);
+        }
+    }
+
+    public void setOut(PrintStream out) {
+        this.out = out;
+    }
+
+    public void setErr(PrintStream err) {
+        this.err = err;
+    }
     
 }

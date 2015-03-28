@@ -16,11 +16,13 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
+import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.concurrent.Encoding;
 import jonelo.jacksum.concurrent.Jacksum2Cli;
 import jonelo.sugar.util.ExitException;
-import org.bouncycastle.util.Encodable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,14 +47,28 @@ public class JacksumCLITest {
     }
 
     @Test
-    public void algorithmTest() throws CmdLineException {
+    public void algorithmTest() throws CmdLineException, ExitException {
         Jacksum2Cli app  = this.getApp("-a", "md5", "aa.txt");
-        assertEquals("md5", app.getAlgorithm());
+        assertEquals(Algorithm.MD5, app.getAlgorithm());
         assertTrue(app.getFilenames().contains("aa.txt"));
+    }
+    
+    
+    @Test
+    public void algorithmWithAlias() throws CmdLineException , ExitException{
+        Jacksum2Cli app  = this.getApp("-a", "md5sum", "aa.txt");
+        assertEquals(Algorithm.MD5, app.getAlgorithm());
     }
 
     @Test
-    public void encodingTest() throws CmdLineException {
+    public void algorithmWithOtherAlias() throws CmdLineException, ExitException {
+        Jacksum2Cli app  = this.getApp("-a", "crc-32", "aa.txt");
+        assertEquals(Algorithm.CRC32, app.getAlgorithm());
+    }
+
+    
+    @Test
+    public void encodingTest() throws CmdLineException, ExitException {
         Jacksum2Cli app  = this.getApp("-E", "bb");
         assertEquals(Encoding.BB, app.getEncoding());
         
@@ -61,24 +77,34 @@ public class JacksumCLITest {
     }
     
     @Test(expected=CmdLineException.class)
-    public void missingEncoding() throws CmdLineException{
+    public void missingEncoding() throws CmdLineException, ExitException{
         this.getApp("-E");
     }
     
     @Test(expected=CmdLineException.class)
-    public void missingAlgorithm() throws CmdLineException{
+    public void missingAlgorithm() throws CmdLineException, ExitException{
         this.getApp("-a");
+    }
+
+    @Test(expected=CmdLineException.class)
+    public void wrongAlgorithm() throws CmdLineException, ExitException{
+        this.getApp("-a" , "algoritmoInexistente");
     }
     
     @Test
-    public void alternate() throws CmdLineException{
+    public void alternate() throws CmdLineException, ExitException{
         Jacksum2Cli app = this.getApp("-A");
         assertTrue(app.isAlternate());
     }
+
+    @Test(expected=CmdLineException.class)
+    public void incompatibleParams() throws CmdLineException, ExitException{
+        Jacksum2Cli app = this.getApp("-h", "-a", "md5", "-A");
+    }
     
     
     @Test
-    public void defaultValues() throws CmdLineException{
+    public void defaultValues() throws CmdLineException, ExitException{
         Jacksum2Cli app = this.getApp("someFile.txt");
         assertFalse(app.isAlternate());
         assertFalse(app.isFileParamIsDirAndWorkingDirectory());
@@ -93,7 +119,7 @@ public class JacksumCLITest {
         assertFalse(app.isShowVersion());
         assertFalse(app.isSummary());
         assertFalse(app.isUpperHexaFormat());
-        assertEquals("sha1", app.getAlgorithm());
+        assertEquals(Algorithm.SHA1, app.getAlgorithm());
         assertNull(app.getCheckFile());
         assertNull(app.getCustomSeparator());
         assertEquals("yyyyMMddHHmmss",app.getDateFormat());
@@ -114,11 +140,20 @@ public class JacksumCLITest {
         assertNull(app.getVerbosity());
     }
     
-    
-    
+    @Test
+    public void help() throws CmdLineException, ExitException{
+        
+        Jacksum2Cli app  = new Jacksum2Cli();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(64*1024);
+        app.setOut(new PrintStream(baos));
+        assertEquals(baos.size(), 0);
+        app.doMain(new String[]{"-h"});
+        assertTrue(baos.size() > 10000);
+        
+    }
     
     /* ----------------------- */
-    private Jacksum2Cli getApp(String... args) throws CmdLineException{
+    private Jacksum2Cli getApp(String... args) throws CmdLineException, ExitException{
         Jacksum2Cli app  = new Jacksum2Cli();
         app.doMain(args);
         return app;

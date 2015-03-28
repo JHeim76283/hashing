@@ -132,7 +132,7 @@ public final class CombinedChecksum extends AbstractChecksum {
      * launched at the beginning of format()
      */
     @Override
-    public void firstFormat(StringBuilder formatBuf) {
+    protected void firstFormat(StringBuilder formatBuf) {
 
         // normalize the checksum code token
         GeneralString.replaceAllStrings(formatBuf, "#FINGERPRINT", "#CHECKSUM");

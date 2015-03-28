@@ -41,8 +41,8 @@ public class ConcurrentHasher {
     private static final int QUEUE_CAPACITY = 1024;
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 
-    private static Hasher minWeight(Hasher[] hashers) {
-        Hasher answer = hashers[0];
+    private static Hasher minWeight(List<Hasher> hashers) {
+        Hasher answer = hashers.get(0);
         for (Hasher h : hashers) {
             if (h.getWeight() < answer.getWeight()) {
                 answer = h;
@@ -60,17 +60,16 @@ public class ConcurrentHasher {
             final List<BlockingQueue<DataUnit>> queues =
                     new ArrayList<>(workingThreads);
 
-            final List<Runnable> tasks = new ArrayList<>(workingThreads);
-
             /* One worker per processor */
-            final Hasher[] workers = new Hasher[workingThreads];
+            final List<Hasher> tasks = new ArrayList<>(workingThreads);
+
 
             // creo las colas y los workers
             for (int i = 0; i < workingThreads; i++) {
                 BlockingQueue<DataUnit> queue = new ArrayBlockingQueue<>(QUEUE_CAPACITY, true);
                 queues.add(queue);
-                workers[i] = new Hasher(queue);
-                tasks.add(workers[i]);
+
+                tasks.add(new Hasher(queue));
             }
 
             // LPT-Algorithm (Longest Processing Time)
@@ -79,10 +78,10 @@ public class ConcurrentHasher {
                 Collections.sort(hashes);
             }
             for (HashAlgorithm hash : hashes) {
-                minWeight(workers).addMessageDigest(hash);
+                minWeight(tasks).addMessageDigest(hash);
             }
 
-            final ExecutorService pool = Executors.newFixedThreadPool(workers.length + 1);
+            final ExecutorService pool = Executors.newFixedThreadPool(tasks.size() + 1);
             pool.submit(new DataReader(src, queues));
 
             List<Future<?>> futures = new ArrayList<>(tasks.size());

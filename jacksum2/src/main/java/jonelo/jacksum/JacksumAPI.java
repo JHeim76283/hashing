@@ -29,6 +29,7 @@ import com.planetj.math.rabinhash.PJLProvider;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Adler32;
 import jonelo.jacksum.algorithm.Adler32alt;
+import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.algorithm.Cksum;
 import jonelo.jacksum.algorithm.Crc16;
 import jonelo.jacksum.algorithm.Crc32;
@@ -72,84 +74,17 @@ import static jonelo.jacksum.algorithm.JacksumRegistry.*;
  * and available encodings for the checksum.
  */
 public class JacksumAPI {
-    
-    
+
     private static final Map<String, String> AVAILABLE_ALGORITHMS;
     private static final Map<String, String> AVAILABLE_ENCODINGS;
-    
-    static{
-        
-        Map<String, String> map = new TreeMap<>();
-        map.put("adler32", "Adler 32");
-        map.put("cksum", "cksum (Unix)");
-        map.put("crc8", "CRC-8 (FLAC)");
-        map.put("crc16", "CRC-16 (LHA/ARC)");
-        map.put("crc24", "CRC-24 (Open PGP)");
-        map.put("crc64", "CRC-64 (ISO 3309)");
-        map.put("crc32", "CRC-32 (FCS-32)");
-        map.put("crc32_mpeg2", "CRC-32 (MPEG-2)");
-        map.put("crc32_bzip2", "CRC-32 (BZIP2)");
-        map.put("ed2k", "ed2k");
-        map.put("elf", "Elf");
-        map.put("fcs16", "FCS-16");
-        map.put("gost", "GOST (R 34.11-94)");
-        map.put("has160", "HAS-160");
-        map.put("haval_128_3", "HAVAL 128 (3 rounds)");
-        map.put("haval_128_4", "HAVAL 128 (4 rounds)");
-        map.put("haval_128_5", "HAVAL 128 (5 rounds)");
-        map.put("haval_160_3", "HAVAL 160 (3 rounds)");
-        map.put("haval_160_4", "HAVAL 160 (4 rounds)");
-        map.put("haval_160_5", "HAVAL 160 (5 rounds)");
-        map.put("haval_192_3", "HAVAL 192 (3 rounds)");
-        map.put("haval_192_4", "HAVAL 192 (4 rounds)");
-        map.put("haval_192_5", "HAVAL 192 (5 rounds)");
-        map.put("haval_224_3", "HAVAL 224 (3 rounds)");
-        map.put("haval_224_4", "HAVAL 224 (4 rounds)");
-        map.put("haval_224_5", "HAVAL 224 (5 rounds)");
-        map.put("haval_256_3", "HAVAL 256 (3 rounds)");
-        map.put("haval_256_4", "HAVAL 256 (4 rounds)");
-        map.put("haval_256_5", "HAVAL 256 (5 rounds)");
-        map.put("md2", "MD2");
-        map.put("md4", "MD4");
-        map.put("md5", "MD5");
-        map.put("ripemd128", "RIPEMD-128");
-        map.put("ripemd160", "RIPEMD-160");
-        map.put("ripemd256", "RIPEMD-256");
-        map.put("ripemd320", "RIPEMD-320");
-        map.put("sha0", "SHA-0");
-        map.put("sha1", "SHA-1 (SHA-160)");
-        map.put("sha224", "SHA-2 (SHA-224)");
-        map.put("sha256", "SHA-2 (SHA-256)");
-        map.put("sha384", "SHA-2 (SHA-384)");
-        map.put("sha512", "SHA-2 (SHA-512)");
-        map.put("sumbsd", "sum (BSD Unix)");
-        map.put("sumsysv", "sum (System V Unix)");
-        map.put("sum8", "sum 8");
-        map.put("sum16", "sum 16");
-        map.put("sum24", "sum 24");
-        map.put("sum32", "sum 32");
-        map.put("tiger128", "Tiger/128");
-        map.put("tiger160", "Tiger/160");
-        map.put("tiger", "Tiger (Tiger/192)");
-        map.put("tiger2", "Tiger2");
-        map.put("tree:tiger", "Tiger Tree Hash");
-        map.put("tree:tiger2", "Tiger2 Tree Hash");
-        map.put("whirlpool0", "Whirlpool-0");
-        map.put("whirlpool1", "Whirlpool-1");
-        map.put("whirlpool2", "Whirlpool");
-        map.put("xor8", "XOR 8");
-        map.put("rhf32", "Rabin Hash 32");
-        map.put("rhf64", "Rabin Hash 64");
-        map.put("sha3-224", "SHA3-224");
-        map.put("sha3-256", "SHA3-256");
-        map.put("sha3-288", "SHA3-288");
-        map.put("sha3-384", "SHA3-384");
-        map.put("sha3-512", "SHA3-512");
-        map.put("sm3", "SM3");
-        map.put("skein-256", "Skein-256");
-        map.put("skein-512", "Skein-512");
-        map.put("skein-1024", "Skein-1024");
-        AVAILABLE_ALGORITHMS = Collections.unmodifiableMap(map);
+
+    private final static Map<String, Algorithm> CANONICAL_MAP;
+
+    static {
+
+        AVAILABLE_ALGORITHMS = Collections.unmodifiableMap(
+                Arrays.stream(Algorithm.values())
+                .collect(Collectors.toMap(Algorithm::getCanonicalName, Algorithm::getDisplayName)));
 
         Map enc = new TreeMap();
         enc.put("", "Default");
@@ -163,9 +98,13 @@ public class JacksumAPI {
         enc.put("base64", "Base 64");
         enc.put("bubblebabble", "BubbleBabble");
         AVAILABLE_ENCODINGS = Collections.unmodifiableMap(enc);
+
+        Map<String, Algorithm> canonicalMap = new HashMap<>();
+        Arrays.stream(Algorithm.values())
+                .forEach(algorithm -> algorithm.mapAliases(canonicalMap));
+
+        CANONICAL_MAP = Collections.unmodifiableMap(canonicalMap);
     }
-     
-    
 
     public final static String NAME = "Jacksum";
     public final static String VERSION = "2.0.0";
@@ -319,7 +258,7 @@ public class JacksumAPI {
                 checksum = new MDgnu(SHA512_HASH);
             }
         } else if (algorithm.equals("sha224") || algorithm.equals("sha-224")) {
-            if(alternate) {
+            if (alternate) {
                 checksum = new MDbouncycastle(SHA224_HASH);
             } else {
                 checksum = new MDgnu(SHA224_HASH);
@@ -345,9 +284,9 @@ public class JacksumAPI {
             checksum = new MDgnu(RIPEMD160_HASH);
         } else if (algorithm.equals("ripemd128") || algorithm.equals("ripemd-128") || algorithm.equals("ripe-md128")
                 || algorithm.equals("rmd128") || algorithm.equals("rmd-128")) {
-            if(alternate){
+            if (alternate) {
                 checksum = new MDgnu(RIPEMD128_HASH);
-            }else{
+            } else {
                 // tested BouncyCastle's implementation was faster.
                 checksum = new MDbouncycastle(RIPEMD128_HASH);
             }
@@ -447,4 +386,7 @@ public class JacksumAPI {
         return checksum;
     }
 
+    public static Algorithm getAlgorithm(String alias) {
+        return CANONICAL_MAP.get(alias);
+    }
 }
