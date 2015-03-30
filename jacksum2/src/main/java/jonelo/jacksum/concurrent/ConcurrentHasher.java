@@ -20,23 +20,32 @@ package jonelo.jacksum.concurrent;
 import java.io.File;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
+import jonelo.jacksum.algorithm.Algorithm;
 
 /**
- * Sets up the concurrent execution and distributes
- * hash algorithms among Hashers based on their weight.
+ * Sets up the concurrent execution and distributes hash algorithms among
+ * Hashers based on their weight.
  *
  * @author Federico Tello Gentile <federicotg@gmail.com>
  */
 public class ConcurrentHasher {
+
+    private static final int BLOCK_QUEUE_SIZE = 4096;
+    private static final int READERS = 2;
 
     private static final int QUEUE_CAPACITY = 1024;
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
@@ -57,12 +66,11 @@ public class ConcurrentHasher {
             final int workingThreads = Math.max(1, Math.min(THREAD_COUNT, hashes.size()));
 
             // One queue per worker
-            final List<BlockingQueue<DataUnit>> queues =
-                    new ArrayList<>(workingThreads);
+            final List<BlockingQueue<DataUnit>> queues
+                    = new ArrayList<>(workingThreads);
 
             /* One worker per processor */
             final List<Hasher> tasks = new ArrayList<>(workingThreads);
-
 
             // creo las colas y los workers
             for (int i = 0; i < workingThreads; i++) {
@@ -97,6 +105,63 @@ public class ConcurrentHasher {
         } catch (NoSuchAlgorithmException | InterruptedException | ExecutionException ex) {
             Logger.getLogger(ConcurrentHasher.class.getName()).throwing("ConcurrentHasher", "updateHashes", ex);
         }
+    }
+
+    public Map<Pair<String, Algorithm>, byte[]> hashFiles(
+            List<String> filenameList,
+            List<Algorithm> algorithms) throws NoSuchAlgorithmException, InterruptedException, ExecutionException {
+
+        
+      
+      
+        // set up run.
+        // filenames to process go in a queue.
+        final Queue<String> filenames = new ConcurrentLinkedQueue<>(filenameList);
+
+        // setup results map
+        final Map<Pair<String, Algorithm>, byte[]> resultHolder = new ConcurrentHashMap<>();
+
+        //a queue and a HashingTask for each file and algorithm
+        Map<Pair<String, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap = new ConcurrentHashMap<>();
+
+        Collection<Runnable> tasks = new ArrayList<>();
+
+        for (String filename : filenameList) {
+            for (Algorithm algorithm : algorithms) {
+
+                BlockingQueue<DataBlock> blockQueue = new ArrayBlockingQueue<>(BLOCK_QUEUE_SIZE);
+
+                tasks.add(new HashingTask(filename, algorithm, blockQueue, resultHolder));
+
+                dataQueueMap.put(new Pair<>(filename, algorithm), blockQueue);
+            }
+        }
+
+        // readers
+        Collection<FileReader> readers = new ArrayList<>(READERS);
+
+        for (int i = 0; i < READERS; i++) {
+            readers.add(new FileReader(filenames, algorithms, dataQueueMap));
+        }
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+
+        List<Future<?>> tasksFutures = new ArrayList<>();
+        for (Runnable task : tasks) {
+            tasksFutures.add(executor.submit(task));
+        }
+
+        for (Runnable reader : readers) {
+            executor.submit(reader);
+        }
+
+        for (Future<?> f : tasksFutures) {
+            f.get();
+        }
+        executor.shutdown();
+
+        return resultHolder;
+
     }
 
 }

@@ -17,13 +17,97 @@
  */
 package jonelo.jacksum.concurrent;
 
+import java.math.BigInteger;
+import java.util.Base64;
+import jonelo.jacksum.util.Service;
+import jonelo.sugar.util.Base32;
+import jonelo.sugar.util.BubbleBabble;
+
 /**
  *
  * @author fede
  */
 public enum Encoding {
-    
-    BIN, DEC, OCT, HEX, HEXUP, BASE16, BASE32, BASE64, BB;
 
-    
+    BIN("bin") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return Service.formatAsBits(byteArray);
+                }
+
+            },
+    DEC("dec") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return new BigInteger(1, byteArray).toString();
+                }
+
+            },
+    OCT("oct") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return new BigInteger(1, byteArray).toString(8);
+                }
+
+            },
+    HEX("hex") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return Service.format(byteArray, false, group, groupChar);
+                }
+
+            },
+    HEXUP("hexup") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return Service.format(byteArray, true, group, groupChar);
+                }
+
+            },
+    BASE16("base16") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return Service.format(byteArray, true, 0, groupChar);
+                }
+
+            },
+    BASE32("base32") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return Base32.encode(byteArray);
+                }
+
+            },
+    BASE64("base64") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return Base64.getEncoder().encodeToString(byteArray);
+                }
+
+            },
+    BB("bubblebabble") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray) {
+                    return BubbleBabble.encode(byteArray);
+                }
+            }/*,
+    DEFAULT("") {
+                @Override
+                public String encode(int group, char groupChar, byte[] byteArray, long value) {
+                    return Long.toString(value);
+                }
+            }*/;
+
+    private final String value;
+
+    Encoding(String val) {
+        this.value = val;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public abstract String encode(int group, char groupChar, byte[] byteArray);
+
 }

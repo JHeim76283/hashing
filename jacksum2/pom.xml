@@ -49,7 +49,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>Jacksum</mainClass>
+                            <mainClass>jonelo.jacksum.concurrent.Jacksum2Cli</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

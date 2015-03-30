@@ -21,10 +21,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.ui.ExitStatus;
 import jonelo.sugar.util.ExitException;
@@ -41,9 +44,9 @@ public class Jacksum2Cli {
 
     private PrintStream out = System.out;
     private PrintStream err = System.err;
-    
+
     @Option(name = "-a", handler = AlgorithmHandler.class, metaVar = "algo")
-    private Algorithm algorithm = Algorithm.SHA1;
+    private List<Algorithm> algorithms;
 
     @Option(name = "-A")
     private boolean alternate = false;
@@ -57,20 +60,20 @@ public class Jacksum2Cli {
     @Option(name = "-e", metaVar = "seq")
     private String expectedHashValue = null;
 
-    @Option(name = "-E", metaVar = "encoding")
+    @Option(name = "-E", metaVar = "encoding", forbids = {"-x", "-X"})
     private Encoding encoding = Encoding.HEX;
 
     @Option(name = "-f")
     private boolean processFilesOnly = false;
 
-    @Option(name = "-F", metaVar = "format")
-    private String format = null;
+    @Option(name = "-F", metaVar = "format", forbids = {"-m"})
+    private String format = "#CHECKSUM #FILENAME";
 
     @Option(name = "-g", metaVar = "count")
     private int hexaGroupSize = -1;
 
     @Option(name = "-G", metaVar = "separatorChar", depends = {"-g"})
-    private Character hexaGroupSeparatorChar = null;
+    private char hexaGroupSeparatorChar = ' ';
 
     @Option(name = "-h", forbids = {
         "-a", "-A", "-c", "-d",
@@ -132,41 +135,80 @@ public class Jacksum2Cli {
     private boolean fileParamIsDirAndWorkingDirectory;
 
     @Option(name = "-x", forbids = {"-E", "-X"})
-    private boolean lowerHexaFormat = true;
+    private boolean lowerHexaFormat = false;
 
     @Option(name = "-X", forbids = {"-E", "-x"})
-    private boolean upperHexaFormat;
+    private boolean upperHexaFormat = false;
 
     @Argument
     private List<String> filenames = new ArrayList<>();
 
     public static void main(String[] args) {
         try {
-            new Jacksum2Cli().doMain(args);
-        } catch (CmdLineException | ExitException e) {
+            Jacksum2Cli app = new Jacksum2Cli();
+            app.initArgs(args);
+        
+           
+            app.printResults();
+        } catch (Exception e) {
             System.err.println(e.getMessage());
             System.exit(ExitStatus.PARAMETER);
         }
     }
 
-    public void doMain(String[] args) throws CmdLineException, ExitException {
+    public void initArgs(String[] args) throws CmdLineException, ExitException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
+        
+  
+        
         CmdLineParser parser = new CmdLineParser(this);
 
         // parse the arguments.
         parser.parseArgument(args);
-            // you can parse additional arguments if you want.
+        // you can parse additional arguments if you want.
         // parser.parseArgument("more","args");
         // after parsing arguments, you should check
         // if enough arguments are given.
 
+    }
+
+    public void printResults() throws Exception{
         if (this.isHelp()) {
             this.printHelp();
+        } else {
+            for (String resultString : this.getFomattedFileHashes()) {
+                this.out.println(resultString);
+            }
         }
+    }
+
+    public List<String> getFomattedFileHashes() throws NoSuchAlgorithmException, InterruptedException, ExecutionException, CmdLineException {
+
+        List<String> allFiles = new FileSystemCollector(ignoreSymbolicLinksToDirectories, this.recursive).collectFiles(this.filenames);
+
+       
+        Map<Pair<String, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(
+                allFiles,
+                this.algorithms);
+
+        HashFormat hashFormat = new HashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
+
+        List<String> answer = new ArrayList<>(allFiles.size());
+
+        for (String filename : allFiles) {
+            
+            File f = new File(filename);
+
+            List<byte[]> byteArrays = this.algorithms.stream().map(algo -> results.get(new Pair<>(filename, algo))).collect(Collectors.toList());
+
+            answer.add(hashFormat.format(this.algorithms, byteArrays, filename, f.length(), f.lastModified()));
+
+        }
+        return answer;
 
     }
 
-    public Algorithm getAlgorithm() {
-        return algorithm;
+    public List<Algorithm> getAlgorithms() {
+        return algorithms;
     }
 
     public boolean isAlternate() {
@@ -186,6 +228,12 @@ public class Jacksum2Cli {
     }
 
     public Encoding getEncoding() {
+        if (this.lowerHexaFormat) {
+            return Encoding.HEX;
+        }
+        if (this.upperHexaFormat) {
+            return Encoding.HEXUP;
+        }
         return encoding;
     }
 
@@ -201,7 +249,7 @@ public class Jacksum2Cli {
         return hexaGroupSize;
     }
 
-    public Character getHexaGroupSeparatorChar() {
+    public char getHexaGroupSeparatorChar() {
         return hexaGroupSeparatorChar;
     }
 
@@ -308,5 +356,5 @@ public class Jacksum2Cli {
     public void setErr(PrintStream err) {
         this.err = err;
     }
-    
+
 }

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.concurrent.ConcurrentHasher;
 import jonelo.jacksum.concurrent.HashAlgorithm;
@@ -191,8 +192,15 @@ public final class CombinedChecksum extends AbstractChecksum {
         this.encoding = ((AbstractChecksum) algorithms.get(0)).getEncoding();
     }
 
-    @Override
-    public long readFile(String filename, boolean reset) throws IOException {
+   
+    /**
+     * Soon to be replaced by a ConcurrentHasher
+     * @param filename
+     * @param reset
+     * @return
+     * @throws IOException 
+     */
+    public long readFileConcurrent(String filename, boolean reset) throws IOException {
         this.filename = filename;
         if (isTimestampWanted()) {
             setTimestamp(filename);
