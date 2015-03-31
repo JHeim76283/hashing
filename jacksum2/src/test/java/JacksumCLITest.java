@@ -19,13 +19,10 @@
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.ExecutionException;
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.concurrent.Encoding;
 import jonelo.jacksum.concurrent.Jacksum2Cli;
-import jonelo.sugar.util.ExitException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -178,18 +175,6 @@ public class JacksumCLITest {
 
     }
     
-    
-    @Test
-    public void md5ADir() throws Exception {
-
-        Jacksum2Cli app = new Jacksum2Cli();
-        
-        app.initArgs(new String[]{"-a", "md5", "-E", "hex", "/home/fede/Documentos"});
-        app.printResults();
-        
-
-    }
-
     
     @Test
     public void allAlgorithms() throws Exception{
