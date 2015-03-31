@@ -26,8 +26,13 @@ package jonelo.jacksum.algorithm;
 
 public class Crc32Mpeg2 extends Cksum {
 
+    public Crc32Mpeg2(){
+        super();
+        reset();
+    }
+    
     @Override
-    public void reset() {
+    public final void reset() {
         // MPEG-2 CRC initialised to FFFFFFFF
         value = 0xFFFFFFFF;
         length = 0;
