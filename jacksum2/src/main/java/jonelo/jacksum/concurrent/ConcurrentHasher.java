@@ -18,6 +18,7 @@
 package jonelo.jacksum.concurrent;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,8 +45,8 @@ import jonelo.jacksum.algorithm.Algorithm;
  */
 public class ConcurrentHasher {
 
-    private static final int BLOCK_QUEUE_SIZE = 4096;
-    private static final int READERS = 2;
+    private static final int BLOCK_QUEUE_SIZE = 8192;
+    private static final int READERS = 4;
 
     private static final int QUEUE_CAPACITY = 1024;
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
@@ -107,26 +108,23 @@ public class ConcurrentHasher {
         }
     }
 
-    public Map<Pair<String, Algorithm>, byte[]> hashFiles(
-            List<String> filenameList,
+    public Map<Pair<Path, Algorithm>, byte[]> hashFiles(
+            List<Path> filenameList,
             List<Algorithm> algorithms) throws NoSuchAlgorithmException, InterruptedException, ExecutionException {
 
-        
-      
-      
         // set up run.
         // filenames to process go in a queue.
-        final Queue<String> filenames = new ConcurrentLinkedQueue<>(filenameList);
+        final Queue<Path> filenames = new ConcurrentLinkedQueue<>(filenameList);
 
         // setup results map
-        final Map<Pair<String, Algorithm>, byte[]> resultHolder = new ConcurrentHashMap<>();
+        final Map<Pair<Path, Algorithm>, byte[]> resultHolder = new ConcurrentHashMap<>();
 
         //a queue and a HashingTask for each file and algorithm
-        Map<Pair<String, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap = new ConcurrentHashMap<>();
+        Map<Pair<Path, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap = new ConcurrentHashMap<>();
 
-        Collection<Runnable> tasks = new ArrayList<>();
+        Collection<Runnable> tasks = new ArrayList<>(filenameList.size());
 
-        for (String filename : filenameList) {
+        for (Path filename : filenameList) {
             for (Algorithm algorithm : algorithms) {
 
                 BlockingQueue<DataBlock> blockQueue = new ArrayBlockingQueue<>(BLOCK_QUEUE_SIZE);
@@ -138,21 +136,23 @@ public class ConcurrentHasher {
         }
 
         // readers
-        Collection<FileReader> readers = new ArrayList<>(READERS);
+        final int readerCount = Math.min(READERS, filenameList.size());
 
-        for (int i = 0; i < READERS; i++) {
+        Collection<FileReader> readers = new ArrayList<>(readerCount);
+
+        for (int i = 0; i < readerCount; i++) {
             readers.add(new FileReader(filenames, algorithms, dataQueueMap));
         }
 
         ExecutorService executor = Executors.newCachedThreadPool();
 
-        List<Future<?>> tasksFutures = new ArrayList<>();
-        for (Runnable task : tasks) {
-            tasksFutures.add(executor.submit(task));
-        }
-
         for (Runnable reader : readers) {
             executor.submit(reader);
+        }
+
+        List<Future<?>> tasksFutures = new ArrayList<>(filenameList.size());
+        for (Runnable task : tasks) {
+            tasksFutures.add(executor.submit(task));
         }
 
         for (Future<?> f : tasksFutures) {

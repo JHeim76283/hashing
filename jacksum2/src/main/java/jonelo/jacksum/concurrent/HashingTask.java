@@ -17,6 +17,7 @@
  */
 package jonelo.jacksum.concurrent;
 
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -31,17 +32,17 @@ import jonelo.jacksum.algorithm.Algorithm;
  */
 public class HashingTask implements Runnable {
 
-    private final String filename;
+    private final Path filename;
     private final Algorithm algorithm;
-    private final Map<Pair<String, Algorithm>, byte[]> resultHolder;
+    private final Map<Pair<Path, Algorithm>, byte[]> resultHolder;
     private final BlockingQueue<DataBlock> dataBlockSource;
     private final AbstractChecksum checksum;
 
     public HashingTask(
-            String filename, 
-            Algorithm algorithm, 
-            BlockingQueue<DataBlock> dataBlockSource, 
-            Map<Pair<String, Algorithm>, byte[]> resultHolder
+            Path filename,
+            Algorithm algorithm,
+            BlockingQueue<DataBlock> dataBlockSource,
+            Map<Pair<Path, Algorithm>, byte[]> resultHolder
     ) throws NoSuchAlgorithmException {
         this.filename = filename;
         this.algorithm = algorithm;
@@ -52,26 +53,27 @@ public class HashingTask implements Runnable {
 
     @Override
     public void run() {
-        
-     //   log("HashingTask starts. "+this.filename+" "+this.algorithm.getCanonicalName());
+
+        //log("HashingTask starts. "+this.filename+" "+this.algorithm.getCanonicalName());
         try {
             DataBlock data = this.dataBlockSource.take();
             while (data.isNotLast()) {
-            //   log("processing one block "+this.filename+" "+this.algorithm.getCanonicalName());
+                //   log("processing one block "+this.filename+" "+this.algorithm.getCanonicalName());
                 data.updateChecksum(this.checksum);
                 data = this.dataBlockSource.take();
             }
 
-      //      log("Saving one result " +this.filename+" "+this.algorithm.getCanonicalName());
+            // log("Saving one result " +this.filename+" "+this.algorithm.getCanonicalName());
             this.resultHolder.put(new Pair<>(this.filename, this.algorithm), this.checksum.getByteArray());
 
         } catch (InterruptedException iEx) {
             Logger.getLogger(HashingTask.class.getName()).throwing("HashingTask", "run", iEx);
         }
+        // log("Hashing finished " +this.filename+" "+this.algorithm.getCanonicalName()+" "+I.incrementAndGet());
     }
-    
-        private void log(String msg){
-            System.out.println(msg);
+
+    private void log(String msg) {
+        System.out.println(msg);
     }
 
 }

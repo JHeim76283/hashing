@@ -90,13 +90,7 @@ public enum Encoding {
                 public String encode(int group, char groupChar, byte[] byteArray) {
                     return BubbleBabble.encode(byteArray);
                 }
-            }/*,
-    DEFAULT("") {
-                @Override
-                public String encode(int group, char groupChar, byte[] byteArray, long value) {
-                    return Long.toString(value);
-                }
-            }*/;
+            };
 
     private final String value;
 

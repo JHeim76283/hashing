@@ -21,16 +21,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.ui.ExitStatus;
-import jonelo.sugar.util.ExitException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -147,19 +152,16 @@ public class Jacksum2Cli {
         try {
             Jacksum2Cli app = new Jacksum2Cli();
             app.initArgs(args);
-        
-           
+
             app.printResults();
-        } catch (Exception e) {
+        } catch (CmdLineException | IOException | NoSuchAlgorithmException | InterruptedException | ExecutionException e) {
             System.err.println(e.getMessage());
             System.exit(ExitStatus.PARAMETER);
         }
     }
 
-    public void initArgs(String[] args) throws CmdLineException, ExitException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
-        
-  
-        
+    public void initArgs(String[] args) throws CmdLineException {
+
         CmdLineParser parser = new CmdLineParser(this);
 
         // parse the arguments.
@@ -171,7 +173,7 @@ public class Jacksum2Cli {
 
     }
 
-    public void printResults() throws Exception{
+    public void printResults() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
         if (this.isHelp()) {
             this.printHelp();
         } else {
@@ -181,29 +183,52 @@ public class Jacksum2Cli {
         }
     }
 
-    public List<String> getFomattedFileHashes() throws NoSuchAlgorithmException, InterruptedException, ExecutionException, CmdLineException {
+    public List<String> getFomattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
 
-        List<String> allFiles = new FileSystemCollector(ignoreSymbolicLinksToDirectories, this.recursive).collectFiles(this.filenames);
+        List<Path> allFiles = new ArrayList<>();
 
-       
-        Map<Pair<String, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(
+        final int maxDepth = this.recursive ? Integer.MAX_VALUE : 1;
+
+        FileSystem fs = FileSystems.getDefault();
+
+        FileVisitOption[] options = this.ignoreSymbolicLinksToDirectories
+                ? new FileVisitOption[0]
+                : new FileVisitOption[]{FileVisitOption.FOLLOW_LINKS};
+
+        final Map<Path, Long> fileSizes = new ConcurrentHashMap<>();
+        final Map<Path, Long> fileLastModified = new ConcurrentHashMap<>();
+
+        for (String filename : this.filenames) {
+            Files.walk(fs.getPath(filename), maxDepth, options)
+                    .filter(path -> Files.isRegularFile(path))
+                    .forEach(path -> {
+                        allFiles.add(path);
+                        try {
+                            fileSizes.put(path, Files.size(path));
+                            fileLastModified.put(path, Files.getLastModifiedTime(path).toMillis());
+                        } catch (IOException ioEx) {
+                            fileSizes.put(path, -1l);
+                            fileLastModified.put(path, 0l);
+                        }
+                    });
+        }
+
+        final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(
                 allFiles,
                 this.algorithms);
 
-        HashFormat hashFormat = new HashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
+        final HashFormat hashFormat = new HashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
 
-        List<String> answer = new ArrayList<>(allFiles.size());
-
-        for (String filename : allFiles) {
-            
-            File f = new File(filename);
-
-            List<byte[]> byteArrays = this.algorithms.stream().map(algo -> results.get(new Pair<>(filename, algo))).collect(Collectors.toList());
-
-            answer.add(hashFormat.format(this.algorithms, byteArrays, filename, f.length(), f.lastModified()));
-
-        }
-        return answer;
+        return allFiles.parallelStream()
+                .map(filename -> hashFormat.format(
+                                this.algorithms,
+                                this.algorithms.stream()
+                                    .map(algo -> results.get(new Pair<>(filename, algo)))
+                                    .collect(Collectors.toList()),
+                                filename.toFile().getAbsolutePath(),
+                                fileSizes.get(filename),
+                                fileLastModified.get(filename)))
+                .collect(Collectors.toList());
 
     }
 
@@ -337,15 +362,13 @@ public class Jacksum2Cli {
         return filenames;
     }
 
-    private void printHelp() throws ExitException {
+    private void printHelp() throws IOException {
         try (InputStream helpTextStream = Jacksum2Cli.class.getResourceAsStream(ResourceBundle.getBundle("resources").getString("help_file"))) {
             byte[] buffer = new byte[8192];
             int read;
             while ((read = helpTextStream.read(buffer)) > 0) {
                 this.out.write(buffer, 0, read);
             }
-        } catch (IOException ex) {
-            throw new ExitException(ex.getMessage(), ExitStatus.IO);
         }
     }
 

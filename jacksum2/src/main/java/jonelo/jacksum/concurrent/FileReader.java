@@ -18,14 +18,15 @@
 package jonelo.jacksum.concurrent;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import jonelo.jacksum.algorithm.Algorithm;
 
@@ -35,14 +36,14 @@ import jonelo.jacksum.algorithm.Algorithm;
  */
 public class FileReader implements Runnable {
 
-    private Queue<String> filenameSource;
-    private Map<Pair<String, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap;
+    private Queue<Path> filenameSource;
+    private Map<Pair<Path, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap;
     private Collection<Algorithm> algorithms;
 
     public FileReader(
-            Queue<String> filenameSource,
+            Queue<Path> filenameSource,
             Collection<Algorithm> algorithms,
-            Map<Pair<String, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap) {
+            Map<Pair<Path, Algorithm>, BlockingQueue<DataBlock>> dataQueueMap) {
         this.dataQueueMap = dataQueueMap;
         this.filenameSource = filenameSource;
         this.algorithms = algorithms;
@@ -50,16 +51,16 @@ public class FileReader implements Runnable {
 
     @Override
     public void run() {
-        //log("FileReader starts...");
-        String filename = this.filenameSource.poll();
+        //  log("FileReader starts...");
+        Path filename = this.filenameSource.poll();
         while (filename != null) {
 
-            try (InputStream is = new BufferedInputStream(new FileInputStream(new File(filename)))) {
+            try (InputStream is = new BufferedInputStream(Files.newInputStream(filename))) {
 
                 byte[] bytes = new byte[8192];
                 int read;
                 while ((read = is.read(bytes)) > 0) {
-                    //log("Read a block from "+filename);
+                    // log("Read a block from "+filename);
                     DataBlock data = new DataBlock(bytes, read);
                     for (Algorithm algorithm : this.algorithms) {
                         this.dataQueueMap.get(new Pair<>(filename, algorithm)).put(data);
@@ -68,7 +69,7 @@ public class FileReader implements Runnable {
                     bytes = new byte[8192];
                 }
                 // last block
-              //  log("Last block from "+filename);
+                //log("Last block from "+filename);
                 for (Algorithm algorithm : this.algorithms) {
                     this.dataQueueMap.get(new Pair<>(filename, algorithm)).put(new DataBlock(null, -1));
                 }
@@ -78,12 +79,12 @@ public class FileReader implements Runnable {
 
             filename = this.filenameSource.poll();
         }
-        
-     //   log("FileReader finished.");
+
+        // log("FileReader finished."+I.incrementAndGet());
     }
 
-    private void log(String msg){
+    private void log(String msg) {
         System.out.println(msg);
     }
-    
+
 }
