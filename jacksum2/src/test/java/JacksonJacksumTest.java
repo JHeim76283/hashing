@@ -15,20 +15,29 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
+import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.algorithm.CombinedChecksum;
+import jonelo.jacksum.concurrent.ConcurrentHasher;
+import jonelo.jacksum.concurrent.Encoding;
+import jonelo.jacksum.concurrent.Pair;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -61,12 +70,12 @@ public class JacksonJacksumTest {
         IMAGE_FILE_RESULTS = list.stream().collect(Collectors.toMap(HashResultHolder::getAlgorithm, Function.identity()));
 
         /*Map<String, String> map = JacksumAPI.getAvailableAlgorithms();
-        map.keySet().stream()
-                .forEach(cannonicalName -> System.out.println(cannonicalName.toUpperCase()+"(\""+map.get(cannonicalName)+"\",\""+cannonicalName+"\", \"alias\"),"));
-        */
+         map.keySet().stream()
+         .forEach(cannonicalName -> System.out.println(cannonicalName.toUpperCase()+"(\""+map.get(cannonicalName)+"\",\""+cannonicalName+"\", \"alias\"),"));
+         */
         /*JacksumAPI.getAvailableAlgorithms().keySet().stream()
-                .forEach(name -> System.out.println("@Benchmark @BenchmarkMode(Mode.AverageTime) @OutputTimeUnit(TimeUnit.MILLISECONDS)  public String "+name+"FileAlt() {return this.getFileHashValue(this.getChecksum(\""+name+"\", true), FILE);}"));
-*/        
+         .forEach(name -> System.out.println("@Benchmark @BenchmarkMode(Mode.AverageTime) @OutputTimeUnit(TimeUnit.MILLISECONDS)  public String "+name+"FileAlt() {return this.getFileHashValue(this.getChecksum(\""+name+"\", true), FILE);}"));
+         */
 //        IMAGE_FILE_RESULTS.keySet().stream().forEach(str -> System.out.println("@Test public void test_" + str + "(){this.individualTest(\"" + str + "\");}"));
         list = new ObjectMapper().readValue(
                 JacksonJacksumTest.class.getResourceAsStream("/jacksum_text.json"),
@@ -414,15 +423,16 @@ public class JacksonJacksumTest {
                 .allMatch(hashHolder -> hashHolder.equals(STRING_RESULTS.get(hashHolder.getAlgorithm()))));
     }
 
-    
     @Test
-    public void allAlgorithms() throws NoSuchAlgorithmException{
+    public void allAlgorithms() throws NoSuchAlgorithmException {
         AbstractChecksum all = JacksumAPI.getChecksumInstance("all");
         String names = JacksumAPI.getAvailableAlgorithms().keySet().stream().collect(Collectors.joining("+"));
         assertEquals(names, all.getName());
-         
+
     }
-    
+
+
+
     /*
      -----------------------------------------------------------------------------------------
      */
@@ -481,11 +491,10 @@ public class JacksonJacksumTest {
         return null;
     }
 
-    
     private AbstractChecksum getChecksum(String algorithmName) {
         return this.getChecksum(algorithmName, false);
     }
-    
+
     private AbstractChecksum getChecksum(String algorithmName, boolean alternate) {
         assertTrue(JacksumAPI.getAvailableAlgorithms().containsKey(algorithmName));
         try {
@@ -501,14 +510,13 @@ public class JacksonJacksumTest {
         final String imageExpected = IMAGE_FILE_RESULTS.get(algorithmName).getValue();
         final String textExpected = TEXT_FILE_RESULTS.get(algorithmName).getValue();
         final String stringExpected = STRING_RESULTS.get(algorithmName).getValue();
-
-        this.assertIndividualTest(algorithmName, this.getChecksum(algorithmName, false), imageExpected, textExpected, stringExpected);
-        this.assertIndividualTest(algorithmName+" alternate", this.getChecksum(algorithmName, true), imageExpected, textExpected, stringExpected);
         
+        this.assertIndividualTest(algorithmName, this.getChecksum(algorithmName, false), imageExpected, textExpected, stringExpected);
+        this.assertIndividualTest(algorithmName + " alternate", this.getChecksum(algorithmName, true), imageExpected, textExpected, stringExpected);
+
     }
-    
-    
-    private void assertIndividualTest(String algorithmName, AbstractChecksum checksum, String imageExpected, String textExpected, String stringExpected){
+
+    private void assertIndividualTest(String algorithmName, AbstractChecksum checksum, String imageExpected, String textExpected, String stringExpected) {
         final String imageActual = this.getFileHashValue(checksum, JacksonJacksumTest.class.getResource("/image.jpg").getFile()).getValue();
         assertEquals(algorithmName, imageExpected, imageActual);
         final String textActual = this.getFileHashValue(checksum, JacksonJacksumTest.class.getResource("/text.txt").getFile()).getValue();
@@ -517,5 +525,4 @@ public class JacksonJacksumTest {
         assertEquals(algorithmName, stringExpected, stringActual);
     }
 
-    
 }
