@@ -422,6 +422,7 @@ public class CrcGeneric extends AbstractChecksum {
      *
      * @return the value of the checksum
      */
+    @Override
     public long getValue() {
         return getFinal();
     }
@@ -447,6 +448,7 @@ public class CrcGeneric extends AbstractChecksum {
      *
      * @return the result of the computation as byte array
      */
+    @Override
     public byte[] getByteArray() {
         long finalvalue = getFinal();
         byte array[] = new byte[width / 8 + ((width % 8 > 0) ? 1 : 0)];

@@ -353,7 +353,7 @@ public class Crc8 extends AbstractChecksum {
 
     @Override
     public long getValue() {
-        return (((long) val) & 0xFFL);
+        return ((long) val) & 0xFFL;
     }
 
     @Override
