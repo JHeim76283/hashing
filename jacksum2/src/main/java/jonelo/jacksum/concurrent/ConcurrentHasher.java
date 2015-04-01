@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
+import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 
 /**
@@ -45,8 +46,12 @@ import jonelo.jacksum.algorithm.Algorithm;
  */
 public class ConcurrentHasher {
 
-    private static final int BLOCK_QUEUE_SIZE = 8192;
+    private static final int TARGET_BUFFER_BYTES = 256 * 1024 * 1024;
+    
+    //private static final int BLOCK_QUEUE_SIZE = 8192;
     private static final int READERS = 4;
+    
+    
 
     private static final int QUEUE_CAPACITY = 1024;
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
@@ -124,21 +129,20 @@ public class ConcurrentHasher {
 
         Collection<Runnable> tasks = new ArrayList<>(filenameList.size());
 
+        // readers
+        final int readerCount = Math.min(READERS, filenameList.size());
+        
+        final int queueSize = TARGET_BUFFER_BYTES / readerCount / AbstractChecksum.BUFFERSIZE;
+        
         for (Path filename : filenameList) {
             for (Algorithm algorithm : algorithms) {
-
-                BlockingQueue<DataBlock> blockQueue = new ArrayBlockingQueue<>(BLOCK_QUEUE_SIZE);
-
+                BlockingQueue<DataBlock> blockQueue = new ArrayBlockingQueue<>(queueSize);
                 tasks.add(new HashingTask(filename, algorithm, blockQueue, resultHolder));
-
                 dataQueueMap.put(new Pair<>(filename, algorithm), blockQueue);
             }
         }
-
-        // readers
-        final int readerCount = Math.min(READERS, filenameList.size());
-
-        Collection<FileReader> readers = new ArrayList<>(readerCount);
+        
+        Collection<Runnable> readers = new ArrayList<>(readerCount);
 
         for (int i = 0; i < readerCount; i++) {
             readers.add(new FileReader(filenames, algorithms, dataQueueMap));

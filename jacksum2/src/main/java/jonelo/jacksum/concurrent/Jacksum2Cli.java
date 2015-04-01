@@ -72,7 +72,7 @@ public class Jacksum2Cli {
     private boolean processFilesOnly = false;
 
     @Option(name = "-F", metaVar = "format", forbids = {"-m"})
-    private String format = "#CHECKSUM #FILENAME";
+    private String format = null;
 
     @Option(name = "-g", metaVar = "count")
     private int hexaGroupSize = -1;
@@ -122,7 +122,7 @@ public class Jacksum2Cli {
     private boolean summary;
 
     @Option(name = "-t", metaVar = "form")
-    private String dateFormat = "yyyyMMddHHmmss";
+    private String dateFormat = null;
 
     @Option(name = "-u", metaVar = "file")
     private File errorFileName;
@@ -217,7 +217,10 @@ public class Jacksum2Cli {
                 allFiles,
                 this.algorithms);
 
-        final HashFormat hashFormat = new HashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
+        
+        final HashFormat hashFormat = format != null 
+                ? new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat)
+                : new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
 
         return allFiles.parallelStream()
                 .map(filename -> hashFormat.format(

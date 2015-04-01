@@ -29,6 +29,7 @@ import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.algorithm.CombinedChecksum;
+import jonelo.jacksum.concurrent.CustomHashFormat;
 import jonelo.jacksum.concurrent.Encoding;
 import jonelo.jacksum.concurrent.HashFormat;
 import jonelo.sugar.util.GeneralString;
@@ -77,7 +78,7 @@ public class FormatTest {
         md5.update("This is a test".getBytes());
         String expected = md5.format(format);
 
-        HashFormat hashFormat = new HashFormat(format, Encoding.HEX, 0, '.', md5.getSeparator(), "yyyyMMddHHmmss");
+        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', md5.getSeparator(), "yyyyMMddHHmmss");
 
         String value = hashFormat.format(
                 Algorithm.MD5,
@@ -101,7 +102,7 @@ public class FormatTest {
         chsum.update("This is a test".getBytes());
         String expected = chsum.format(format);
 
-        HashFormat hashFormat = new HashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
+        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
 
         String value = hashFormat.format(
                 Algorithm.SHA3_224,
@@ -126,7 +127,7 @@ public class FormatTest {
         chsum.update(message.getBytes());
         String expected = chsum.format(format);
 
-        HashFormat hashFormat = new HashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
+        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
 
         String value = hashFormat.format(
                 Arrays.asList(new Algorithm[]{Algorithm.MD5, Algorithm.SHA1, Algorithm.CRC32, Algorithm.XOR8}),
@@ -152,7 +153,7 @@ public class FormatTest {
         chsum.readFile(filename);
         String expected = chsum.format(format);
 
-        HashFormat hashFormat = new HashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
+        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
 
         String value = hashFormat.format(
                 Arrays.asList(new Algorithm[]{Algorithm.MD5, Algorithm.SHA1, Algorithm.CRC32, Algorithm.XOR8}),

@@ -144,13 +144,13 @@ public class JacksumCLITest {
         assertNull(app.getAlgorithms());
         assertNull(app.getCheckFile());
         assertNull(app.getCustomSeparator());
-        assertEquals("yyyyMMddHHmmss", app.getDateFormat());
+        assertNull(app.getDateFormat());
         assertEquals(Encoding.HEX, app.getEncoding());
         assertNull(app.getErrorFileName());
         assertNull(app.getExpectedHashValue());
         assertEquals(1, app.getFilenames().size());
         assertTrue(app.getFilenames().contains("someFile.txt"));
-        assertEquals("#CHECKSUM #FILENAME", app.getFormat());
+        assertNull(app.getFormat());
         assertTrue(' ' == app.getHexaGroupSeparatorChar());
         assertEquals(-1, app.getHexaGroupSize());
         assertNull(app.getOutputFile());
