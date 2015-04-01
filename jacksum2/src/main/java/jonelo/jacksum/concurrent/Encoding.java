@@ -24,8 +24,8 @@ import jonelo.sugar.util.Base32;
 import jonelo.sugar.util.BubbleBabble;
 
 /**
- *
- * @author fede
+ * 
+ * @author Federico Tello Gentile <federicotg@gmail.com>
  */
 public enum Encoding {
 
