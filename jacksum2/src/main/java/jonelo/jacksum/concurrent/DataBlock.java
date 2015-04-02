@@ -25,8 +25,8 @@ import jonelo.jacksum.algorithm.AbstractChecksum;
  */
 public class DataBlock {
     
-    private byte[] bytes;
-    private int length;
+    private final byte[] bytes;
+    private final int length;
     
     public DataBlock(byte[] bytes, int length){
         this.bytes = bytes;

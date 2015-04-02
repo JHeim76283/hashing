@@ -35,7 +35,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
-import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 
@@ -49,7 +48,6 @@ public class ConcurrentHasher {
 
     private static final int TARGET_BUFFER_BYTES = 256 * 1024 * 1024;
 
-    //private static final int BLOCK_QUEUE_SIZE = 8192;
     private static final int READERS = 4;
 
     private static final int QUEUE_CAPACITY = 1024;

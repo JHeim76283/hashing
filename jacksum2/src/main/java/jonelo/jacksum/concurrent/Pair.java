@@ -24,8 +24,8 @@ import java.util.Objects;
  * @author Federico Tello Gentile <federicotg@gmail.com>
  */
 public class Pair<First, Second> {
-    private First first;
-    private Second second;
+    private final First first;
+    private final Second second;
     
     public Pair(First first, Second second){
         this.first = first;
