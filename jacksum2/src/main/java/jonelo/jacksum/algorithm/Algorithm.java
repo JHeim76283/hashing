@@ -413,5 +413,9 @@ public enum Algorithm {
     public AbstractChecksum getChecksumInstance(boolean alternate) throws NoSuchAlgorithmException {
         return new MDgnu(this.getCanonicalName());
     }
+    
+    public final AbstractChecksum getChecksumInstance() throws NoSuchAlgorithmException {
+        return this.getChecksumInstance(false);
+    }
 
 }

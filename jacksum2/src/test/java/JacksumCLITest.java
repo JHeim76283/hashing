@@ -93,10 +93,12 @@ public class JacksumCLITest {
         this.getApp("-E");
     }
 
+    
+    
     @Test
-    public void defaultEncoding() throws Exception {
-         Jacksum2Cli app = this.getApp("aa.txt");
-         assertEquals(Encoding.HEX, app.getEncoding());
+    public void quick() throws Exception {
+         Jacksum2Cli app = this.getApp("-a", "md5", "-q", "txt:This is a test");
+         app.printResults();
     }
     
     @Test(expected = CmdLineException.class)

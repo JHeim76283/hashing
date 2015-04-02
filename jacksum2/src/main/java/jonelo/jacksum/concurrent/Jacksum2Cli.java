@@ -35,7 +35,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import jonelo.jacksum.JacksumAPI;
+import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.ui.ExitStatus;
 import org.kohsuke.args4j.Argument;
@@ -48,13 +48,13 @@ import org.kohsuke.args4j.Option;
  * @author Federico Tello Gentile <federicotg@gmail.com>
  */
 public class Jacksum2Cli {
-    
-    private static List<String> GENERIC_CRC_SPECS = new ArrayList<>();
 
-    public static void addCRCSpec(String spec){
+    private static final List<String> GENERIC_CRC_SPECS = new ArrayList<>();
+
+    public static void addCRCSpec(String spec) {
         GENERIC_CRC_SPECS.add(spec);
     }
-    
+
     private PrintStream out = System.out;
     private PrintStream err = System.err;
 
@@ -184,30 +184,49 @@ public class Jacksum2Cli {
     public void printResults() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
         if (this.isHelp()) {
             this.printHelp();
-        } else if(this.quickSequence != null){
-            
-            
+        } else if (this.quickSequence != null) {
+
             Map<String, QuickSequenceType> map = new HashMap<>();
             map.put("txt", QuickSequenceType.TXT);
             map.put("hex", QuickSequenceType.HEX);
             map.put("dec", QuickSequenceType.DEC);
-            
-            String[] sequenceParts = this.quickSequence.toLowerCase().split(":");
+
+            String[] sequenceParts = this.quickSequence.split(":");
             QuickSequenceType qsType;
-            if(sequenceParts.length == 1){
+            String message;
+            if (sequenceParts.length == 1) {
                 qsType = QuickSequenceType.HEX;
-            }else{
+                message = sequenceParts[0];
+            } else {
                 qsType = map.get(sequenceParts[0]);
+                message = sequenceParts[1];
             }
-            
-            
-            
-        
-        }else {
+            this.out.println(this.getFomattedByteArrayHash(qsType.decode(message)));
+
+        } else {
             for (String resultString : this.getFomattedFileHashes()) {
                 this.out.println(resultString);
             }
         }
+    }
+
+    private String getFomattedByteArrayHash(byte[] bytes) {
+        final HashFormat hashFormat = format != null
+                ? new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat)
+                : new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
+
+        List<byte[]> byteArrays = this.algorithms.stream().map(algo -> {
+            try {
+                AbstractChecksum chsum = algo.getChecksumInstance(this.alternate);
+                chsum.update(bytes);
+                return chsum.getByteArray();
+                //
+            } catch (NoSuchAlgorithmException nsaEx) {
+                throw new IllegalArgumentException(nsaEx);
+            }
+        }).collect(Collectors.toList());
+
+        return hashFormat.format(this.algorithms, byteArrays, this.format, this.hexaGroupSize, this.pathSeparator);
     }
 
     public List<String> getFomattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
@@ -244,8 +263,7 @@ public class Jacksum2Cli {
                 allFiles,
                 this.algorithms, GENERIC_CRC_SPECS);
 
-        
-        final HashFormat hashFormat = format != null 
+        final HashFormat hashFormat = format != null
                 ? new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat)
                 : new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
 
@@ -253,8 +271,8 @@ public class Jacksum2Cli {
                 .map(filename -> hashFormat.format(
                                 this.algorithms,
                                 this.algorithms.stream()
-                                    .map(algo -> results.get(new Pair<>(filename, algo)))
-                                    .collect(Collectors.toList()),
+                                .map(algo -> results.get(new Pair<>(filename, algo)))
+                                .collect(Collectors.toList()),
                                 filename.toFile().getAbsolutePath(),
                                 fileSizes.get(filename),
                                 fileLastModified.get(filename)))
