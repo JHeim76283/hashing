@@ -58,6 +58,7 @@ public class Edonkey extends AbstractChecksum {
         }
         md4final = JacksumHashFactory.getInstance(AUX_ALGORITHM);
         virgin = true;
+        this.setName("ed2k");
     }
 
     @Override

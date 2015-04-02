@@ -72,6 +72,7 @@ public class Crc16 extends AbstractChecksum {
 
     public Crc16() {
         val = 0;
+        this.setName("crc16");
     }
 
     @Override

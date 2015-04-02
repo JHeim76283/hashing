@@ -57,6 +57,7 @@ public class MDgnu extends AbstractChecksum {
             throw new NoSuchAlgorithmException(arg + " is an unknown algorithm.");
         }
         virgin = true;
+        this.setName(arg);
     }
 
     @Override

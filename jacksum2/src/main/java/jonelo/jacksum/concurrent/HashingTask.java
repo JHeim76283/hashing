@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
@@ -36,19 +37,31 @@ public class HashingTask implements Runnable {
     private final Algorithm algorithm;
     private final Map<Pair<Path, Algorithm>, byte[]> resultHolder;
     private final BlockingQueue<DataBlock> dataBlockSource;
-    private final AbstractChecksum checksum;
+    private AbstractChecksum checksum;
+    private String crcSpec;
+
+    public HashingTask(
+            Path filename,
+            Algorithm algorithm,
+            String crcSpec,
+            BlockingQueue<DataBlock> dataBlockSource,
+            Map<Pair<Path, Algorithm>, byte[]> resultHolder) {
+        this.filename = filename;
+        this.algorithm = algorithm;
+        this.resultHolder = resultHolder;
+        this.dataBlockSource = dataBlockSource;
+        this.crcSpec = crcSpec;
+    }
 
     public HashingTask(
             Path filename,
             Algorithm algorithm,
             BlockingQueue<DataBlock> dataBlockSource,
-            Map<Pair<Path, Algorithm>, byte[]> resultHolder
-    ) throws NoSuchAlgorithmException {
+            Map<Pair<Path, Algorithm>, byte[]> resultHolder) {
         this.filename = filename;
         this.algorithm = algorithm;
         this.resultHolder = resultHolder;
         this.dataBlockSource = dataBlockSource;
-        this.checksum = JacksumAPI.getChecksumInstance(this.algorithm.getCanonicalName());
     }
 
     @Override
@@ -56,6 +69,8 @@ public class HashingTask implements Runnable {
 
         //log("HashingTask starts. "+this.filename+" "+this.algorithm.getCanonicalName());
         try {
+            this.checksum = this.algorithm.getChecksumInstance(crcSpec == null ? "" : crcSpec, false);
+            //JacksumAPI.getChecksumInstance(this.algorithm.getCanonicalName());
             DataBlock data = this.dataBlockSource.take();
             while (data.isNotLast()) {
                 //   log("processing one block "+this.filename+" "+this.algorithm.getCanonicalName());
@@ -66,7 +81,7 @@ public class HashingTask implements Runnable {
             // log("Saving one result " +this.filename+" "+this.algorithm.getCanonicalName());
             this.resultHolder.put(new Pair<>(this.filename, this.algorithm), this.checksum.getByteArray());
 
-        } catch (InterruptedException iEx) {
+        } catch (InterruptedException | NoSuchAlgorithmException iEx) {
             Logger.getLogger(HashingTask.class.getName()).throwing("HashingTask", "run", iEx);
         }
         // log("Hashing finished " +this.filename+" "+this.algorithm.getCanonicalName()+" "+I.incrementAndGet());

@@ -323,6 +323,7 @@ public class Crc8 extends AbstractChecksum {
     public Crc8() {
         val = 0;
         length = 0;
+        this.setName("crc8");
     }
 
     @Override

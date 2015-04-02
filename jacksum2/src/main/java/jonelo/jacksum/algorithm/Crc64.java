@@ -121,6 +121,7 @@ public class Crc64 extends AbstractChecksum {
         super();
         value = 0;
         encoding = HEX;
+        this.setName("crc64");
     }
 
     @Override

@@ -348,7 +348,7 @@ public class GeneralString {
     }
 
     public static String[] split(String str, String delimiter) {
-        ArrayList al = new ArrayList();
+        List<String> al = new ArrayList<>();
         int startpos = 0;
         int found = -1;
         do {

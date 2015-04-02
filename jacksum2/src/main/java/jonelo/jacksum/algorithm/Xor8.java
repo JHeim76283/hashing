@@ -29,6 +29,7 @@ public class Xor8 extends AbstractChecksum {
 
     public Xor8() {
         value = 0;
+        this.setName("xor8");
     }
 
     @Override

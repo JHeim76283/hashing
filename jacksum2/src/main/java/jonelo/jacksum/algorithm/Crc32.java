@@ -39,6 +39,7 @@ public class Crc32 extends AbstractChecksum {
     public Crc32() {
         super();
         crc32 = new CRC32();
+        this.setName("crc32");
     }
 
     @Override

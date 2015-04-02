@@ -46,6 +46,7 @@ public class MDTree extends AbstractChecksum {
         encoding = BASE32;
         virgin = true;
         md = new TigerTree(arg);
+        this.setName("tree:"+arg);
     }
 
     @Override

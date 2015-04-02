@@ -43,6 +43,7 @@ public class Adler32alt extends AbstractChecksum {
     public Adler32alt() {
         value = 1L;
         length = 0;
+        this.setName("adler32");
     }
 
     @Override

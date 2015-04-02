@@ -50,13 +50,18 @@ public class AlgorithmHandler extends OptionHandler<Algorithm> {
 
         if ("all".equals(argument)) {
             algorithms = JacksumAPI.getAvailableAlgorithms().keySet().stream()
-                    .map(algorithmName -> JacksumAPI.getAlgorithm(algorithmName))
+                    .map(algorithmName -> Algorithm.getAlgorithm(algorithmName))
                     .collect(Collectors.toList());
 
-        } else {
+        }  else {
             algorithms = SPLIT_PATTERN.splitAsStream(argument)
-                    .map(algorithmName -> JacksumAPI.getAlgorithm(algorithmName))
-                    .collect(Collectors.toList());
+                    .map(algorithmName -> {
+                        if(algorithmName.startsWith("crc:")){
+                            Jacksum2Cli.addCRCSpec(algorithmName.split(":")[1]);
+                            return Algorithm.CRC_GENERIC;
+                        }
+                        return Algorithm.getAlgorithm(algorithmName);
+                    }).collect(Collectors.toList());
         }
 
         if (algorithms.contains(null)) {

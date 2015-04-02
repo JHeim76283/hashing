@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,11 +27,9 @@ import java.util.stream.Collectors;
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
-import jonelo.jacksum.algorithm.CombinedChecksum;
 import jonelo.jacksum.concurrent.CustomHashFormat;
 import jonelo.jacksum.concurrent.Encoding;
 import jonelo.jacksum.concurrent.HashFormat;
-import jonelo.sugar.util.GeneralString;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -122,12 +119,16 @@ public class FormatTest {
         final String format = "Hola #ALGONAME{i} #FINGERPRINT (#ALGONAME{i}) tiene valor #QUOTE#CHECKSUM{i}#QUOTE chau.#CHECKSUM{1} #CHECKSUM{0} #ALGONAME{0} #ALGONAME{3}";
         final String message = "This is a test";
 
-        AbstractChecksum chsum = JacksumAPI.getChecksumInstance("md5+sha1+crc32+xor8");
-        chsum.setTimestampFormat("yyyyMMddHHmmss");
-        chsum.update(message.getBytes());
-        String expected = chsum.format(format);
+       // AbstractChecksum chsum = JacksumAPI.getChecksumInstance("md5+sha1+crc32+xor8");
+        // chsum.setTimestampFormat("yyyyMMddHHmmss");
+        //chsum.update(message.getBytes());
+        //String expected = chsum.format(format);
+        String expected = "Hola md5 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (md5) tiene valor \"ce114e4501d2f4e2dcea3e17b546f339\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n"
+                + "Hola sha1 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (sha1) tiene valor \"a54d88e06612d820bc3be72877c74f257b561b19\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n"
+                + "Hola crc32 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (crc32) tiene valor \"c07a9f32\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n"
+                + "Hola xor8 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (xor8) tiene valor \"6b\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n";
 
-        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
+        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', " ", "yyyyMMddHHmmss");
 
         String value = hashFormat.format(
                 Arrays.asList(new Algorithm[]{Algorithm.MD5, Algorithm.SHA1, Algorithm.CRC32, Algorithm.XOR8}),
@@ -136,8 +137,22 @@ public class FormatTest {
                 0,
                 0);
 
-        //   System.out.println("Expected: " + expected);
-        //    System.out.println("Value:    " + value);
+        if(!expected.equals(value)){
+            
+            if(expected.length() != value.length()){
+                System.out.println("LENGTHS!!! expected: "+expected.length()+" - actual: "+value.length());
+            }else{
+            
+            for(int i=0; i<expected.length();i++){
+                if(expected.charAt(i)!= value.charAt(i)){
+                    System.out.println("char "+i);
+                }
+            }
+            }
+            
+           System.out.println("Expected: " + expected);
+           System.out.println("Value:    " + value);
+        }
         assertEquals(expected, value);
     }
 
@@ -148,12 +163,22 @@ public class FormatTest {
 
         final String filename = JacksonJacksumTest.class.getResource("/image.jpg").getFile();
 
-        AbstractChecksum chsum = JacksumAPI.getChecksumInstance("md5+sha1+crc32+xor8");
-        chsum.setTimestampFormat("yyyyMMddHHmmss");
-        chsum.readFile(filename);
-        String expected = chsum.format(format);
+        final String justFile = new File(filename).getName();
+        final String justPath = new File(filename).getParent();
+        
+        
+        //replace NetBeansProjects/hashing/jacksum2/src/test/resources/
+        // by 
+        //AbstractChecksum chsum = JacksumAPI.getChecksumInstance("md5+sha1+crc32+xor8");
+        //  chsum.setTimestampFormat("yyyyMMddHHmmss");
+        // chsum.readFile(filename);
+        //String expected = chsum.format(format);
+        String expected = "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ md5 (md5) tiene valor \"994664f1ddc7745252f02ac9311c7d29\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
+                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ sha1 (sha1) tiene valor \"4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
+                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ crc32 (crc32) tiene valor \"cfd36125\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
+                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ xor8 (xor8) tiene valor \"a0\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n";
 
-        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', chsum.getSeparator(), "yyyyMMddHHmmss");
+        HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', " ", "yyyyMMddHHmmss");
 
         String value = hashFormat.format(
                 Arrays.asList(new Algorithm[]{Algorithm.MD5, Algorithm.SHA1, Algorithm.CRC32, Algorithm.XOR8}),
@@ -163,7 +188,7 @@ public class FormatTest {
                 0);
 
         //  System.out.println("Expected: " + expected);
-        //   System.out.println("Value:    " + value);
+      //    System.out.println("Value:    " + value);
         assertEquals(expected, value);
 
     }

@@ -69,6 +69,7 @@ public class FCS16 extends AbstractChecksum {
     public FCS16() {
         value = 0xFFFF;
         length = 0;
+        this.setName("fcs16");
     }
 
     @Override

@@ -29,6 +29,7 @@ public class Sum8 extends AbstractChecksum {
 
     public Sum8() {
         value = 0;
+        this.setName("sum8");
     }
 
     @Override

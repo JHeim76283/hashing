@@ -30,6 +30,7 @@ public class SumSysV extends AbstractChecksum {
 
     public SumSysV() {
         separator = " ";
+        this.setName("sumsysv");
     }
 
     public void update(byte b) {

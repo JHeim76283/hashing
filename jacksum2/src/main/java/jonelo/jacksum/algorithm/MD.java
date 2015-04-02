@@ -40,23 +40,22 @@ public class MD extends AbstractChecksum {
     private boolean virgin = true;
     private byte[] digest = null;
 
-    public MD(String arg, Provider provider) throws NoSuchAlgorithmException {
+    private MD(String arg, MessageDigest md){
         length = 0;
         filename = null;
         separator = " ";
         encoding = HEX;
         virgin = true;
-        md = MessageDigest.getInstance(arg, provider);
+        this.md = md;
+        this.setName(arg);
+    }
+    
+    public MD(String arg, Provider provider) throws NoSuchAlgorithmException {
+        this(arg, MessageDigest.getInstance(arg, provider));
     }
 
     public MD(String arg) throws NoSuchAlgorithmException {
-        // value=0; we don't use value, we use md
-        length = 0;
-        filename = null;
-        separator = " ";
-        encoding = HEX;
-        virgin = true;
-        md = MessageDigest.getInstance(arg);
+        this(arg, MessageDigest.getInstance(arg));
     }
 
     @Override

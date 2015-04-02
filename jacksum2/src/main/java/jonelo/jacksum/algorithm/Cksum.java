@@ -89,9 +89,9 @@ public class Cksum extends AbstractChecksum {
     };
 
     public Cksum() {
-        super();
         value = 0;
         length = 0;
+        this.setName("cksum");
     }
 
     @Override

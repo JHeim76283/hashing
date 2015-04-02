@@ -31,6 +31,7 @@ public class SumBSD extends AbstractChecksum {
 
     public SumBSD() {
         separator = " ";
+        this.setName("sumbsd");
     }
 
     /**

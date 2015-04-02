@@ -28,6 +28,7 @@ public class Sum32 extends Sum8 {
     
     public Sum32() {
         value = 0;
+        this.setName("sum32");
     }
     
     @Override

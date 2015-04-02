@@ -103,7 +103,7 @@ public class MDbouncycastle extends AbstractChecksum {
         separator = " ";
         encoding = HEX;
         virgin = true;
-
+        this.setName(arg);
         Digest answer = FACTORY_MAP.get(arg.toLowerCase()).get();
 
         if (answer == null) {

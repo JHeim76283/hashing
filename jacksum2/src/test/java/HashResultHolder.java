@@ -31,6 +31,9 @@ public class HashResultHolder {
     }
 
     public void setAlgorithm(String algorithm) {
+        if(algorithm == null){
+            System.out.println("STOP");
+        }
         this.algorithm = algorithm;
     }
 

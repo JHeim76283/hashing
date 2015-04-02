@@ -19,6 +19,7 @@
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.util.List;
 import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.concurrent.Encoding;
@@ -112,6 +113,16 @@ public class JacksumCLITest {
     public void wrongAlgorithmCombined() throws Exception {
         this.getApp("-a", "md5+nada");
     }
+
+    @Test
+    public void genericCRC() throws Exception {
+        final String filename = JacksonJacksumTest.class.getResource("/image.jpg").getFile();
+        Jacksum2Cli app = this.getApp("-a", "crc:24,864CFB,B704CE,false,false,0", filename);
+        List<String> hashes = app.getFomattedFileHashes();
+        assertEquals(1, hashes.size());
+        assertEquals("1f168d\t2921017\t"+filename, hashes.get(0));
+    }
+    
     
     @Test
     public void alternate() throws Exception {

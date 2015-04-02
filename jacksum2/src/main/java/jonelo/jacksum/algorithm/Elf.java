@@ -31,6 +31,7 @@ public class Elf extends AbstractChecksum {
     public Elf() {
         value = 0;
         length = 0;
+        this.setName("elf");
     }
 
     @Override

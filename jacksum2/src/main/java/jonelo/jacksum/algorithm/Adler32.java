@@ -34,6 +34,7 @@ public class Adler32 extends AbstractChecksum {
     
     public Adler32() {
         adler32 = new java.util.zip.Adler32();
+        this.setName("adler32");
     }
     
     @Override

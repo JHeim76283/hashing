@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
+import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 
@@ -47,11 +48,9 @@ import jonelo.jacksum.algorithm.Algorithm;
 public class ConcurrentHasher {
 
     private static final int TARGET_BUFFER_BYTES = 256 * 1024 * 1024;
-    
+
     //private static final int BLOCK_QUEUE_SIZE = 8192;
     private static final int READERS = 4;
-    
-    
 
     private static final int QUEUE_CAPACITY = 1024;
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
@@ -115,7 +114,8 @@ public class ConcurrentHasher {
 
     public Map<Pair<Path, Algorithm>, byte[]> hashFiles(
             List<Path> filenameList,
-            List<Algorithm> algorithms) throws NoSuchAlgorithmException, InterruptedException, ExecutionException {
+            List<Algorithm> algorithms,
+            List<String> crcSpecs) throws NoSuchAlgorithmException, InterruptedException, ExecutionException {
 
         // set up run.
         // filenames to process go in a queue.
@@ -131,17 +131,25 @@ public class ConcurrentHasher {
 
         // readers
         final int readerCount = Math.min(READERS, filenameList.size());
-        
+
         final int queueSize = TARGET_BUFFER_BYTES / readerCount / AbstractChecksum.BUFFERSIZE;
-        
+
         for (Path filename : filenameList) {
+            int i = 0;
             for (Algorithm algorithm : algorithms) {
                 BlockingQueue<DataBlock> blockQueue = new ArrayBlockingQueue<>(queueSize);
-                tasks.add(new HashingTask(filename, algorithm, blockQueue, resultHolder));
+                Runnable task;
+                if (algorithm.equals(Algorithm.CRC_GENERIC)) {
+                    task = new HashingTask(filename, algorithm, crcSpecs.get(i), blockQueue, resultHolder);
+                    i++;
+                } else {
+                    task = new HashingTask(filename, algorithm, blockQueue, resultHolder);
+                }
+                tasks.add(task);
                 dataQueueMap.put(new Pair<>(filename, algorithm), blockQueue);
             }
         }
-        
+
         Collection<Runnable> readers = new ArrayList<>(readerCount);
 
         for (int i = 0; i < readerCount; i++) {
@@ -165,6 +173,14 @@ public class ConcurrentHasher {
         executor.shutdown();
 
         return resultHolder;
+
+    }
+
+    public Map<Algorithm, byte[]> hashBytes(
+            byte[] bytes,
+            List<Algorithm> algorithms) {
+
+        return null;
 
     }
 

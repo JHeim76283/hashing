@@ -19,25 +19,21 @@
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import jonelo.jacksum.JacksumAPI;
+
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.algorithm.CombinedChecksum;
-import jonelo.jacksum.concurrent.ConcurrentHasher;
-import jonelo.jacksum.concurrent.Encoding;
-import jonelo.jacksum.concurrent.Pair;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -117,7 +113,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_sha256() {
-        this.individualTest("sha256");
+        this.individualTest("sha-256");
     }
 
     @Test
@@ -162,7 +158,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_whirlpool2() {
-        this.individualTest("whirlpool2");
+        this.individualTest("whirlpool_2003");
     }
 
     @Test
@@ -187,7 +183,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_whirlpool0() {
-        this.individualTest("whirlpool0");
+        this.individualTest("whirlpool_2000");
     }
 
     @Test
@@ -202,7 +198,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_whirlpool1() {
-        this.individualTest("whirlpool1");
+        this.individualTest("whirlpool");
     }
 
     @Test
@@ -222,7 +218,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_sha0() {
-        this.individualTest("sha0");
+        this.individualTest("sha-0");
     }
 
     @Test
@@ -267,7 +263,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_sha512() {
-        this.individualTest("sha512");
+        this.individualTest("sha-512");
     }
 
     @Test
@@ -282,7 +278,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_has160() {
-        this.individualTest("has160");
+        this.individualTest("has-160");
     }
 
     @Test
@@ -302,7 +298,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_sha384() {
-        this.individualTest("sha384");
+        this.individualTest("sha-384");
     }
 
     @Test
@@ -332,7 +328,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_tiger128() {
-        this.individualTest("tiger128");
+        this.individualTest("tiger-128");
     }
 
     @Test
@@ -347,7 +343,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_sha224() {
-        this.individualTest("sha224");
+        this.individualTest("sha-224");
     }
 
     @Test
@@ -362,7 +358,7 @@ public class JacksonJacksumTest {
 
     @Test
     public void test_tiger160() {
-        this.individualTest("tiger160");
+        this.individualTest("tiger-160");
     }
 
     @Test
@@ -423,15 +419,6 @@ public class JacksonJacksumTest {
                 .allMatch(hashHolder -> hashHolder.equals(STRING_RESULTS.get(hashHolder.getAlgorithm()))));
     }
 
-    @Test
-    public void allAlgorithms() throws NoSuchAlgorithmException {
-        AbstractChecksum all = JacksumAPI.getChecksumInstance("all");
-        String names = JacksumAPI.getAvailableAlgorithms().keySet().stream().collect(Collectors.joining("+"));
-        assertEquals(names, all.getName());
-
-    }
-
-
 
     /*
      -----------------------------------------------------------------------------------------
@@ -462,7 +449,16 @@ public class JacksonJacksumTest {
         assertTrue(expected.keySet().stream()
                 .map(algorithmName -> getChecksum(algorithmName))
                 .map(checksum -> getFileHashValue(checksum, filename))
-                .allMatch(hashHolder -> hashHolder.equals(expected.get(hashHolder.getAlgorithm()))));
+                .allMatch(hashHolder -> {
+                    boolean ok = hashHolder.equals(expected.get(hashHolder.getAlgorithm()));
+                    if(!ok){
+                        
+                        System.out.println("Algo: "+hashHolder.getAlgorithm()+" expected: "+expected.get(hashHolder.getAlgorithm()).getValue()+" actual: "+hashHolder.getValue());
+                    }
+                    return ok;
+                }
+                
+                ));
     }
 
     private HashResultHolder getStringHashValue(AbstractChecksum chsum, String text) {
@@ -496,9 +492,9 @@ public class JacksonJacksumTest {
     }
 
     private AbstractChecksum getChecksum(String algorithmName, boolean alternate) {
-        assertTrue(JacksumAPI.getAvailableAlgorithms().containsKey(algorithmName));
+        //assertTrue(JacksumAPI.getAvailableAlgorithms().containsKey(algorithmName));
         try {
-            return JacksumAPI.getChecksumInstance(algorithmName, alternate);
+            return Algorithm.getAlgorithm(algorithmName).getChecksumInstance(algorithmName, alternate);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(JacksonJacksumTest.class.getName()).throwing(JacksonJacksumTest.class.getName(), "getChecksum", ex);
             fail(ex.getMessage());

@@ -70,8 +70,8 @@ public class FCS32 extends AbstractChecksum {
     };
 
     public FCS32() {
-        super();
         reset();
+        this.setName("crc32");
     }
 
     @Override

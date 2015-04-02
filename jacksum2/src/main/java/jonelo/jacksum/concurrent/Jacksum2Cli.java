@@ -28,12 +28,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import jonelo.jacksum.JacksumAPI;
 import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.ui.ExitStatus;
 import org.kohsuke.args4j.Argument;
@@ -46,7 +48,13 @@ import org.kohsuke.args4j.Option;
  * @author Federico Tello Gentile <federicotg@gmail.com>
  */
 public class Jacksum2Cli {
+    
+    private static List<String> GENERIC_CRC_SPECS = new ArrayList<>();
 
+    public static void addCRCSpec(String spec){
+        GENERIC_CRC_SPECS.add(spec);
+    }
+    
     private PrintStream out = System.out;
     private PrintStream err = System.err;
 
@@ -176,7 +184,26 @@ public class Jacksum2Cli {
     public void printResults() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
         if (this.isHelp()) {
             this.printHelp();
-        } else {
+        } else if(this.quickSequence != null){
+            
+            
+            Map<String, QuickSequenceType> map = new HashMap<>();
+            map.put("txt", QuickSequenceType.TXT);
+            map.put("hex", QuickSequenceType.HEX);
+            map.put("dec", QuickSequenceType.DEC);
+            
+            String[] sequenceParts = this.quickSequence.toLowerCase().split(":");
+            QuickSequenceType qsType;
+            if(sequenceParts.length == 1){
+                qsType = QuickSequenceType.HEX;
+            }else{
+                qsType = map.get(sequenceParts[0]);
+            }
+            
+            
+            
+        
+        }else {
             for (String resultString : this.getFomattedFileHashes()) {
                 this.out.println(resultString);
             }
@@ -215,7 +242,7 @@ public class Jacksum2Cli {
 
         final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(
                 allFiles,
-                this.algorithms);
+                this.algorithms, GENERIC_CRC_SPECS);
 
         
         final HashFormat hashFormat = format != null 

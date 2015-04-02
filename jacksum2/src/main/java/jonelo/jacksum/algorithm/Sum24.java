@@ -28,6 +28,7 @@ public class Sum24 extends Sum8 {
 
     public Sum24() {
         value = 0;
+        this.setName("sum24");
     }
 
     @Override

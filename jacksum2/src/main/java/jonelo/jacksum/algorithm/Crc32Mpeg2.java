@@ -27,8 +27,8 @@ package jonelo.jacksum.algorithm;
 public class Crc32Mpeg2 extends Cksum {
 
     public Crc32Mpeg2(){
-        super();
         reset();
+        this.setName("crc32_mpeg2");
     }
     
     @Override
