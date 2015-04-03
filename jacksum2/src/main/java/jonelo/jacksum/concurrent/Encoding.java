@@ -104,4 +104,8 @@ public enum Encoding {
 
     public abstract String encode(int group, char groupChar, byte[] byteArray);
 
+    public final void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb){
+        sb.append(this.encode(group, groupChar, byteArray));
+    }
+    
 }

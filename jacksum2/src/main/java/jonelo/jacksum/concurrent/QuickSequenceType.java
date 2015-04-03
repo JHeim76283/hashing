@@ -17,6 +17,8 @@
  */
 package jonelo.jacksum.concurrent;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -62,6 +64,27 @@ public enum QuickSequenceType {
                 }
             };
 
+    
+    public static byte[] decodeQuickSequence(String quickSequence){
+                final Map<String, QuickSequenceType> map = new HashMap<>();
+        map.put("txt", QuickSequenceType.TXT);
+        map.put("hex", QuickSequenceType.HEX);
+        map.put("dec", QuickSequenceType.DEC);
+
+        final String[] sequenceParts = quickSequence.split(":");
+        QuickSequenceType qsType;
+        String message;
+        if (sequenceParts.length == 1) {
+            qsType = QuickSequenceType.HEX;
+            message = sequenceParts[0];
+        } else {
+            qsType = map.get(sequenceParts[0]);
+            message = sequenceParts[1];
+        }
+        return qsType.decode(message);
+
+    }
+    
     protected static final Pattern DECIMAL_SEQUENCE_SEPARATOR = Pattern.compile(",");
 
     abstract byte[] decode(String sequence);

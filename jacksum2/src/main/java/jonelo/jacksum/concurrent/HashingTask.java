@@ -71,8 +71,8 @@ public class HashingTask implements Runnable {
         //log("HashingTask starts. "+this.filename+" "+this.algorithm.getCanonicalName());
         try {
             this.checksum = crcSpec == null
-                    ? this.algorithm.getChecksumInstance(false)
-                    : this.algorithm.getChecksumInstance(this.crcSpec, false);
+                    ? this.algorithm.getChecksumInstance(this.alternate)
+                    : this.algorithm.getChecksumInstance(this.crcSpec, this.alternate);
             //JacksumAPI.getChecksumInstance(this.algorithm.getCanonicalName());
             DataBlock data = this.dataBlockSource.take();
             while (data.isNotLast()) {

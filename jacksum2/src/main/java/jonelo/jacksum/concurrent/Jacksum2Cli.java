@@ -17,7 +17,9 @@
  */
 package jonelo.jacksum.concurrent;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -37,7 +39,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
-import jonelo.jacksum.ui.ExitStatus;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -51,6 +52,9 @@ public class Jacksum2Cli {
 
     private static final List<String> GENERIC_CRC_SPECS = new ArrayList<>();
 
+    private static final int ERROR_STATUS = 2;
+    private static final int OK = 0;
+
     public static void addCRCSpec(String spec) {
         GENERIC_CRC_SPECS.add(spec);
     }
@@ -62,7 +66,7 @@ public class Jacksum2Cli {
     private List<Algorithm> algorithms;
 
     @Option(name = "-A")
-    private boolean alternate = false;
+    private boolean alternative = false;
 
     @Option(name = "-c", metaVar = "list")
     private File checkFile = null;
@@ -99,10 +103,10 @@ public class Jacksum2Cli {
     private boolean fullPath = false;
 
     @Option(name = "-o", metaVar = "file", forbids = {"-O"})
-    private File outputFile = null;
+    private String outputFile = null;
 
     @Option(name = "-O", metaVar = "file", forbids = {"-o"})
-    private File overwriteOutputFile = null;
+    private String overwriteOutputFile = null;
 
     @Option(name = "-I", metaVar = "string")
     private String prefixToIgnoreInFilenames = null;
@@ -131,11 +135,11 @@ public class Jacksum2Cli {
     @Option(name = "-t", metaVar = "form")
     private String dateFormat = null;
 
-    @Option(name = "-u", metaVar = "file")
-    private File errorFileName;
+    @Option(name = "-u", metaVar = "file", forbids = {"-U"})
+    private String errorFileName;
 
-    @Option(name = "-U", metaVar = "file")
-    private File overwriteErrorFileName;
+    @Option(name = "-U", metaVar = "file", forbids = {"-u"})
+    private String overwriteErrorFileName;
 
     @Option(name = "-v")
     private boolean showVersion;
@@ -156,15 +160,17 @@ public class Jacksum2Cli {
     private List<String> filenames = new ArrayList<>();
 
     public static void main(String[] args) {
+        Jacksum2Cli app = new Jacksum2Cli();
         try {
-            Jacksum2Cli app = new Jacksum2Cli();
             app.initArgs(args);
-
-            app.printResults();
-        } catch (CmdLineException | IOException | NoSuchAlgorithmException | InterruptedException | ExecutionException e) {
-            System.err.println(e.getMessage());
-            System.exit(ExitStatus.PARAMETER);
+        } catch (CmdLineException ex) {
+            System.err.println(ex.getMessage());
+            System.exit(ERROR_STATUS);
         }
+
+        int status = app.printResults();
+        System.exit(status);
+
     }
 
     public void initArgs(String[] args) throws CmdLineException {
@@ -180,78 +186,55 @@ public class Jacksum2Cli {
 
     }
 
-    
-    private HashFormat getHashFormat(){
-        if(this.quickSequence != null){
-            return new QuickHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator);
-        }
-        if(this.format == null){
-            return new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
-        }
-        return new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
-    }
-    
-    public void printResults() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
-        if (this.isHelp()) {
-            this.printHelp();
-        } else if (this.quickSequence != null) {
+    public int printResults() {
+        try {
 
-            this.out.println(this.getFormattedQuickHash());
+            if (this.isHelp()) {
+                this.printHelp();
+                return OK;
+            }
 
-        } else {
+            this.initOutput();
+
+            if (this.quickSequence != null) {
+                this.out.println(this.getFormattedQuickHash());
+                return OK;
+            }
+
             for (String resultString : this.getFormattedFileHashes()) {
                 this.out.println(resultString);
             }
+
+            return OK;
+
+        } catch (Throwable ex) {
+            this.printError(ex.getMessage());
+            return ERROR_STATUS;
         }
     }
 
-    
-    public String getFormattedQuickHash(){
-            Map<String, QuickSequenceType> map = new HashMap<>();
-            map.put("txt", QuickSequenceType.TXT);
-            map.put("hex", QuickSequenceType.HEX);
-            map.put("dec", QuickSequenceType.DEC);
+    public String getFormattedQuickHash() {
 
-            String[] sequenceParts = this.quickSequence.split(":");
-            QuickSequenceType qsType;
-            String message;
-            if (sequenceParts.length == 1) {
-                qsType = QuickSequenceType.HEX;
-                message = sequenceParts[0];
-            } else {
-                qsType = map.get(sequenceParts[0]);
-                message = sequenceParts[1];
-            }
-            return this.getFomattedByteArrayHash(qsType.decode(message));
-        
-    }
-    
-    private String getFomattedByteArrayHash(byte[] bytes) {
-        final HashFormat hashFormat = this.getHashFormat();
+        final Map<Algorithm, byte[]> results = new ConcurrentHasher().hashBytes(
+                QuickSequenceType.decodeQuickSequence(this.quickSequence),
+                this.algorithms,
+                this.alternative,
+                GENERIC_CRC_SPECS);
 
-        List<byte[]> byteArrays = this.algorithms.stream().map(algo -> {
-            try {
-                AbstractChecksum chsum = algo.getChecksumInstance(this.alternate);
-                chsum.update(bytes);
-                return chsum.getByteArray();
-                //
-            } catch (NoSuchAlgorithmException nsaEx) {
-                throw new IllegalArgumentException(nsaEx);
-            }
-        }).collect(Collectors.toList());
+        return this.getHashFormat().format(this.algorithms,
+                this.algorithms.stream().map(algo -> results.get(algo)).collect(Collectors.toList()));
 
-        return hashFormat.format(this.algorithms, byteArrays, this.format, this.hexaGroupSize, this.pathSeparator);
     }
 
     public List<String> getFormattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
 
-        List<Path> allFiles = new ArrayList<>();
+        final List<Path> allFiles = new ArrayList<>();
 
         final int maxDepth = this.recursive ? Integer.MAX_VALUE : 1;
 
-        FileSystem fs = FileSystems.getDefault();
+        final FileSystem fs = FileSystems.getDefault();
 
-        FileVisitOption[] options = this.ignoreSymbolicLinksToDirectories
+        final FileVisitOption[] options = this.ignoreSymbolicLinksToDirectories
                 ? new FileVisitOption[0]
                 : new FileVisitOption[]{FileVisitOption.FOLLOW_LINKS};
 
@@ -273,17 +256,14 @@ public class Jacksum2Cli {
                     });
         }
 
-        final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(
-                allFiles,
-                this.algorithms, 
-                this.alternate, 
+        final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(allFiles,
+                this.algorithms,
+                this.alternative,
                 GENERIC_CRC_SPECS);
 
-        final HashFormat hashFormat = format != null
-                ? new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat)
-                : new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
+        final HashFormat hashFormat = this.getHashFormat();
 
-        return allFiles.parallelStream()
+        return allFiles.stream()
                 .map(filename -> hashFormat.format(
                                 this.algorithms,
                                 this.algorithms.stream()
@@ -301,7 +281,7 @@ public class Jacksum2Cli {
     }
 
     public boolean isAlternate() {
-        return alternate;
+        return alternative;
     }
 
     public File getCheckFile() {
@@ -350,11 +330,11 @@ public class Jacksum2Cli {
         return fullPath;
     }
 
-    public File getOutputFile() {
+    public String getOutputFile() {
         return outputFile;
     }
 
-    public File getOverwriteOutputFile() {
+    public String getOverwriteOutputFile() {
         return overwriteOutputFile;
     }
 
@@ -394,11 +374,11 @@ public class Jacksum2Cli {
         return dateFormat;
     }
 
-    public File getErrorFileName() {
+    public String getErrorFileName() {
         return errorFileName;
     }
 
-    public File getOverwriteErrorFileName() {
+    public String getOverwriteErrorFileName() {
         return overwriteErrorFileName;
     }
 
@@ -440,8 +420,40 @@ public class Jacksum2Cli {
         this.out = out;
     }
 
-    public void setErr(PrintStream err) {
-        this.err = err;
+    private void printError(String errorMessage) {
+        this.err.println(errorMessage);
     }
 
+    private HashFormat getHashFormat() {
+        if (this.format == null) {
+            return new SimpleHashFormat(this.getEncoding(), hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
+        }
+        return new CustomHashFormat(format, this.getEncoding(), hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
+    }
+
+    private void initOutput() throws IOException {
+
+        if (this.outputFile != null) {
+            File outfile = new File(this.outputFile);
+            if (!outfile.exists()) {
+                this.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(outfile))));
+            } else {
+                throw new IOException("The file " + this.outputFile + " already exists. Specify the file by -O to overwrite it.");
+            }
+        } else if (this.overwriteOutputFile != null) {
+            this.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(new File(this.overwriteOutputFile)))));
+        }
+
+        if (this.errorFileName != null) {
+            File outfile = new File(this.errorFileName);
+            if (!outfile.exists()) {
+                this.err = new PrintStream(new BufferedOutputStream(new FileOutputStream(outfile)));
+            } else {
+                throw new IOException("The file " + this.errorFileName + " already exists. Specify the file by -U to overwrite it.");
+            }
+        } else if (this.overwriteErrorFileName != null) {
+            this.err = new PrintStream(new BufferedOutputStream(new FileOutputStream(new File(this.overwriteErrorFileName))));
+        }
+
+    }
 }

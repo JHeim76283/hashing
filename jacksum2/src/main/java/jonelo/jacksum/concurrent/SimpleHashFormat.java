@@ -34,11 +34,20 @@ public class SimpleHashFormat extends HashFormat {
 
     @Override
     public String format(List<Algorithm> algorithms, List<byte[]> byteArrays, String filename, long fileSize, long timestamp) {
-        return this.getEncoding().encode(this.getGroup(), this.getGroupChar(), joinByteArrays(byteArrays))
-                .concat(this.getSeparator())
-                .concat(fileSize + this.getSeparator())
-                .concat((this.getTimeStampFormat() != null ? (new SimpleDateFormat(this.getTimeStampFormat()).format(new Date(timestamp))) + this.getSeparator() : ""))
-                .concat(filename);
+        StringBuilder sb = new StringBuilder(100);
+        this.getEncoding().encode(this.getGroup(), this.getGroupChar(), joinByteArrays(byteArrays), sb);
+
+        if (filename != null) {
+            sb.append(this.getSeparator())
+                    .append(fileSize)
+                    .append(this.getSeparator());
+            if (this.getTimeStampFormat() != null) {
+                sb.append(new SimpleDateFormat(this.getTimeStampFormat()).format(new Date(timestamp)))
+                        .append(this.getSeparator());
+            }
+            sb.append(filename);
+        }
+        return sb.toString();
     }
 
 }

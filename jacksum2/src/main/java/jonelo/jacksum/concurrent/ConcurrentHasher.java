@@ -23,6 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -35,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
 
@@ -177,10 +179,26 @@ public class ConcurrentHasher {
 
     public Map<Algorithm, byte[]> hashBytes(
             byte[] bytes,
-            List<Algorithm> algorithms) {
-
-        return null;
-
+            List<Algorithm> algorithms,
+            boolean alternative,
+            List<String> crcSpecs) {
+        try {
+            Map<Algorithm, byte[]> answer = new HashMap<>();
+            int i = 0;
+            for (Algorithm algorithm : algorithms) {
+                AbstractChecksum chsum;
+                if (algorithm.equals(Algorithm.CRC_GENERIC)) {
+                    chsum = algorithm.getChecksumInstance(crcSpecs.get(i), alternative);
+                    i++;
+                } else {
+                    chsum = algorithm.getChecksumInstance(alternative);
+                }
+                chsum.update(bytes);
+                answer.put(algorithm, chsum.getByteArray());
+            }
+            return answer;
+        } catch (NoSuchAlgorithmException nsaEx) {
+            throw new IllegalArgumentException(nsaEx);
+        }
     }
-
 }

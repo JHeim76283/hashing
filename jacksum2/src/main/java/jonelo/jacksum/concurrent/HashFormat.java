@@ -52,6 +52,12 @@ public abstract class HashFormat {
             long timestamp) {
         return this.format(Collections.singletonList(algorithm), Collections.singletonList(byteArray), filename, fileSize, timestamp);
     }
+    
+     public final String format(
+            List<Algorithm> algorithms,
+            List<byte[]> byteArrays){
+         return this.format(algorithms, byteArrays, null, -1l, 0l);
+     }
 
     public abstract String format(
             List<Algorithm> algorithms,
