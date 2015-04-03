@@ -17,8 +17,6 @@
  */
 package jonelo.jacksum.concurrent;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import jonelo.jacksum.algorithm.Algorithm;
 import static jonelo.jacksum.concurrent.HashFormat.joinByteArrays;
