@@ -97,7 +97,7 @@ public class JacksumCLITest {
     public void quick() throws Exception {
          Jacksum2Cli app = this.getApp("-a", "md5", "-q", "txt:This is a test");
          String actual = app.getFormattedQuickHash();
-         assertEquals("ce114e4501d2f4e2dcea3e17b546f339 ", actual);
+         assertEquals("ce114e4501d2f4e2dcea3e17b546f339", actual);
     }
     
     @Test(expected = CmdLineException.class)
@@ -121,7 +121,8 @@ public class JacksumCLITest {
         Jacksum2Cli app = this.getApp("-a", "crc:24,864CFB,B704CE,false,false,0", filename);
         List<String> hashes = app.getFormattedFileHashes();
         assertEquals(1, hashes.size());
-        assertEquals("1f168d\t2921017\t"+filename, hashes.get(0));
+        String actual = hashes.get(0);
+        assertEquals("1f168d\t2921017\t"+filename, actual);
     }
     
     
