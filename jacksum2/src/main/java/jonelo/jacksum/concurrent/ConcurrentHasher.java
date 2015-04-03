@@ -113,6 +113,7 @@ public class ConcurrentHasher {
     public Map<Pair<Path, Algorithm>, byte[]> hashFiles(
             List<Path> filenameList,
             List<Algorithm> algorithms,
+            boolean alternative,
             List<String> crcSpecs) throws NoSuchAlgorithmException, InterruptedException, ExecutionException {
 
         // set up run.
@@ -138,7 +139,7 @@ public class ConcurrentHasher {
                 BlockingQueue<DataBlock> blockQueue = new ArrayBlockingQueue<>(queueSize);
                 Runnable task;
                 if (algorithm.equals(Algorithm.CRC_GENERIC)) {
-                    task = new HashingTask(filename, algorithm, crcSpecs.get(i), blockQueue, resultHolder);
+                    task = new HashingTask(filename, algorithm, alternative, crcSpecs.get(i), blockQueue, resultHolder);
                     i++;
                 } else {
                     task = new HashingTask(filename, algorithm, blockQueue, resultHolder);

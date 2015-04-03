@@ -275,7 +275,9 @@ public class Jacksum2Cli {
 
         final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(
                 allFiles,
-                this.algorithms, GENERIC_CRC_SPECS);
+                this.algorithms, 
+                this.alternate, 
+                GENERIC_CRC_SPECS);
 
         final HashFormat hashFormat = format != null
                 ? new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat)

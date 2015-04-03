@@ -39,10 +39,12 @@ public class HashingTask implements Runnable {
     private final BlockingQueue<DataBlock> dataBlockSource;
     private AbstractChecksum checksum;
     private String crcSpec;
+    private boolean alternate;
 
     public HashingTask(
             Path filename,
             Algorithm algorithm,
+            boolean alternate,
             String crcSpec,
             BlockingQueue<DataBlock> dataBlockSource,
             Map<Pair<Path, Algorithm>, byte[]> resultHolder) {
@@ -51,6 +53,7 @@ public class HashingTask implements Runnable {
         this.resultHolder = resultHolder;
         this.dataBlockSource = dataBlockSource;
         this.crcSpec = crcSpec;
+        this.alternate = alternate;
     }
 
     public HashingTask(
@@ -69,7 +72,9 @@ public class HashingTask implements Runnable {
 
         //log("HashingTask starts. "+this.filename+" "+this.algorithm.getCanonicalName());
         try {
-            this.checksum = this.algorithm.getChecksumInstance(crcSpec == null ? "" : crcSpec, false);
+            this.checksum = crcSpec == null
+                    ? this.algorithm.getChecksumInstance(false)
+                    : this.algorithm.getChecksumInstance(this.crcSpec, false);
             //JacksumAPI.getChecksumInstance(this.algorithm.getCanonicalName());
             DataBlock data = this.dataBlockSource.take();
             while (data.isNotLast()) {

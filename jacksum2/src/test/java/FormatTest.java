@@ -62,9 +62,6 @@ public class FormatTest {
     public void tearDown() {
     }
 
-    // TODO add test methods here.
-    // The methods must be annotated with annotation @Test. For example:
-    //
     @Test
     public void simple() throws NoSuchAlgorithmException {
 
@@ -119,10 +116,6 @@ public class FormatTest {
         final String format = "Hola #ALGONAME{i} #FINGERPRINT (#ALGONAME{i}) tiene valor #QUOTE#CHECKSUM{i}#QUOTE chau.#CHECKSUM{1} #CHECKSUM{0} #ALGONAME{0} #ALGONAME{3}";
         final String message = "This is a test";
 
-       // AbstractChecksum chsum = JacksumAPI.getChecksumInstance("md5+sha1+crc32+xor8");
-        // chsum.setTimestampFormat("yyyyMMddHHmmss");
-        //chsum.update(message.getBytes());
-        //String expected = chsum.format(format);
         String expected = "Hola md5 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (md5) tiene valor \"ce114e4501d2f4e2dcea3e17b546f339\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n"
                 + "Hola sha1 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (sha1) tiene valor \"a54d88e06612d820bc3be72877c74f257b561b19\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n"
                 + "Hola crc32 ce114e4501d2f4e2dcea3e17b546f339a54d88e06612d820bc3be72877c74f257b561b19c07a9f326b (crc32) tiene valor \"c07a9f32\" chau.a54d88e06612d820bc3be72877c74f257b561b19 ce114e4501d2f4e2dcea3e17b546f339 md5 xor8\n"
@@ -167,12 +160,6 @@ public class FormatTest {
         final String justPath = new File(filename).getParent();
         
         
-        //replace NetBeansProjects/hashing/jacksum2/src/test/resources/
-        // by 
-        //AbstractChecksum chsum = JacksumAPI.getChecksumInstance("md5+sha1+crc32+xor8");
-        //  chsum.setTimestampFormat("yyyyMMddHHmmss");
-        // chsum.readFile(filename);
-        //String expected = chsum.format(format);
         String expected = "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ md5 (md5) tiene valor \"994664f1ddc7745252f02ac9311c7d29\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
                 + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ sha1 (sha1) tiene valor \"4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
                 + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ crc32 (crc32) tiene valor \"cfd36125\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"

@@ -78,40 +78,21 @@ public class ConcurrentTest {
     @Test
     public void allAlgorithmsNewConcurrent() throws NoSuchAlgorithmException, InterruptedException, ExecutionException, IOException {
 
-        // standard way
-        /*AbstractChecksum chsum = JacksumAPI.getChecksumInstance("crc32_mpeg2");
-        chsum.setEncoding(AbstractChecksum.HEX);
-        chsum.readFile("/home/fede/NetBeansProjects/hashing/jacksum2/src/test/resources/image.jpg");
-        System.out.println(chsum.getFormattedValue());
-        */
-        
-        
-        
         
         List<Algorithm> algorithms = IMAGE_FILE_RESULTS.keySet().stream()
                 .map(algorithmName -> Algorithm.getAlgorithm(algorithmName))
                 .collect(Collectors.toList());
 
-       // Path path = FileSystems.getDefault().getPath(JacksonJacksumTest.class.getResource("/image.jpg").getFile());
-        Path path = FileSystems.getDefault().getPath("/home/fede/NetBeansProjects/hashing/jacksum2/src/test/resources/image.jpg");
+        Path path = FileSystems.getDefault().getPath(JacksonJacksumTest.class.getResource("/image.jpg").getFile());
 
-        for (Map.Entry<Pair<Path, Algorithm>, byte[]> e : new ConcurrentHasher().hashFiles(Collections.singletonList(path), algorithms, Collections.emptyList()).entrySet()) {
+        for (Map.Entry<Pair<Path, Algorithm>, byte[]> e : new ConcurrentHasher().hashFiles(Collections.singletonList(path), algorithms, false, Collections.emptyList()).entrySet()) {
 
             String expected = IMAGE_FILE_RESULTS.get(e.getKey().getSecond().getCanonicalName()).getValue();
             String actual = Encoding.HEX.encode(-1, ' ', e.getValue());
-            /*if (!expected.equals(actual)) {
-                System.out.println(e.getKey().getSecond().getCanonicalName());
-                System.out.println("expected: " + expected);
-                System.out.println("actual:   " + actual);
-            }*/
 
             assertEquals(expected, actual);
         }
 
-        /*assertTrue(new ConcurrentHasher().hashFiles(
-         Collections.singletonList(path), algorithms).entrySet().stream()
-         .allMatch(entry -> IMAGE_FILE_RESULTS.get(entry.getKey().getSecond().getCanonicalName()).getValue().equals(Encoding.HEX.encode(-1, ' ', entry.getValue()))));
-         */
     }
 
 }
