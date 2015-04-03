@@ -21,24 +21,21 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import jonelo.jacksum.algorithm.Algorithm;
+import static jonelo.jacksum.concurrent.HashFormat.joinByteArrays;
 
 /**
  *
  * @author Federico Tello Gentile <federicotg@gmail.com>
  */
-public class SimpleHashFormat extends HashFormat {
+public class QuickHashFormat extends HashFormat {
 
-    public SimpleHashFormat(Encoding encoding, int group, char groupChar, String timeStampFormat) {
-        super(null, encoding, group, groupChar, "\t", timeStampFormat);
+    public QuickHashFormat(Encoding encoding, int group, char groupChar, String separator) {
+        super(null, encoding, group, groupChar, separator, null);
     }
-
+   
     @Override
     public String format(List<Algorithm> algorithms, List<byte[]> byteArrays, String filename, long fileSize, long timestamp) {
-        return this.getEncoding().encode(this.getGroup(), this.getGroupChar(), joinByteArrays(byteArrays))
-                .concat(this.getSeparator())
-                .concat(fileSize + this.getSeparator())
-                .concat((this.getTimeStampFormat() != null ? (new SimpleDateFormat(this.getTimeStampFormat()).format(new Date(timestamp))) + this.getSeparator() : ""))
-                .concat(filename);
+        return this.getEncoding().encode(this.getGroup(), this.getGroupChar(), joinByteArrays(byteArrays)) + this.getSeparator();
     }
-
+    
 }

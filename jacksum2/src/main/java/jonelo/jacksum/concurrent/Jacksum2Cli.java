@@ -123,10 +123,9 @@ public class Jacksum2Cli {
     private boolean recursive;
 
     @Option(name = "-s", metaVar = "sep")
-    private String customSeparator;
+    private String customSeparator = " ";
 
     @Option(name = "-S")
-
     private boolean summary;
 
     @Option(name = "-t", metaVar = "form")
@@ -181,11 +180,33 @@ public class Jacksum2Cli {
 
     }
 
+    
+    private HashFormat getHashFormat(){
+        if(this.quickSequence != null){
+            return new QuickHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator);
+        }
+        if(this.format == null){
+            return new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
+        }
+        return new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat);
+    }
+    
     public void printResults() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
         if (this.isHelp()) {
             this.printHelp();
         } else if (this.quickSequence != null) {
 
+            this.out.println(this.getFormattedQuickHash());
+
+        } else {
+            for (String resultString : this.getFormattedFileHashes()) {
+                this.out.println(resultString);
+            }
+        }
+    }
+
+    
+    public String getFormattedQuickHash(){
             Map<String, QuickSequenceType> map = new HashMap<>();
             map.put("txt", QuickSequenceType.TXT);
             map.put("hex", QuickSequenceType.HEX);
@@ -201,19 +222,12 @@ public class Jacksum2Cli {
                 qsType = map.get(sequenceParts[0]);
                 message = sequenceParts[1];
             }
-            this.out.println(this.getFomattedByteArrayHash(qsType.decode(message)));
-
-        } else {
-            for (String resultString : this.getFomattedFileHashes()) {
-                this.out.println(resultString);
-            }
-        }
+            return this.getFomattedByteArrayHash(qsType.decode(message));
+        
     }
-
+    
     private String getFomattedByteArrayHash(byte[] bytes) {
-        final HashFormat hashFormat = format != null
-                ? new CustomHashFormat(format, encoding, hexaGroupSize, hexaGroupSeparatorChar, customSeparator, dateFormat)
-                : new SimpleHashFormat(encoding, hexaGroupSize, hexaGroupSeparatorChar, dateFormat);
+        final HashFormat hashFormat = this.getHashFormat();
 
         List<byte[]> byteArrays = this.algorithms.stream().map(algo -> {
             try {
@@ -229,7 +243,7 @@ public class Jacksum2Cli {
         return hashFormat.format(this.algorithms, byteArrays, this.format, this.hexaGroupSize, this.pathSeparator);
     }
 
-    public List<String> getFomattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
+    public List<String> getFormattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
 
         List<Path> allFiles = new ArrayList<>();
 

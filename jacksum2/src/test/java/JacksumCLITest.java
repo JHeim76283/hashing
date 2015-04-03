@@ -93,12 +93,11 @@ public class JacksumCLITest {
         this.getApp("-E");
     }
 
-    
-    
     @Test
     public void quick() throws Exception {
          Jacksum2Cli app = this.getApp("-a", "md5", "-q", "txt:This is a test");
-         app.printResults();
+         String actual = app.getFormattedQuickHash();
+         assertEquals("ce114e4501d2f4e2dcea3e17b546f339 ", actual);
     }
     
     @Test(expected = CmdLineException.class)
@@ -120,7 +119,7 @@ public class JacksumCLITest {
     public void genericCRC() throws Exception {
         final String filename = JacksonJacksumTest.class.getResource("/image.jpg").getFile();
         Jacksum2Cli app = this.getApp("-a", "crc:24,864CFB,B704CE,false,false,0", filename);
-        List<String> hashes = app.getFomattedFileHashes();
+        List<String> hashes = app.getFormattedFileHashes();
         assertEquals(1, hashes.size());
         assertEquals("1f168d\t2921017\t"+filename, hashes.get(0));
     }
@@ -153,10 +152,9 @@ public class JacksumCLITest {
         assertFalse(app.isShowVersion());
         assertFalse(app.isSummary());
         assertFalse(app.isUpperHexaFormat());
-        
         assertNull(app.getAlgorithms());
         assertNull(app.getCheckFile());
-        assertNull(app.getCustomSeparator());
+        assertEquals(" ", app.getCustomSeparator());
         assertNull(app.getDateFormat());
         assertEquals(Encoding.HEX, app.getEncoding());
         assertNull(app.getErrorFileName());
