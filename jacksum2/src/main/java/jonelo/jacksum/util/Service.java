@@ -69,9 +69,9 @@ public class Service {
         return sb.toString();
     }*/
 
-    public static String format(byte[] bytes) {
+   /* public static String format(byte[] bytes) {
         return format(bytes, false);
-    }
+    }*/
 
  /*   private static StringBuilder insertBlanks(StringBuilder sb, int group, char groupChar) {
         int bytecount = sb.length() / 2; // we expect a hex string
@@ -150,9 +150,9 @@ public class Service {
         return sb.toString();
     }
 
-    public static String format(byte[] bytes, boolean uppercase) {
+   /* public static String format(byte[] bytes, boolean uppercase) {
         return format(bytes, false, 0, ' ');
-    }
+    }*/
 
     public static boolean isSymbolicLink(File file) {
         // there are no symbolic links on Windows
