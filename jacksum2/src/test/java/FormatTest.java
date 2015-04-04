@@ -30,6 +30,8 @@ import jonelo.jacksum.algorithm.Algorithm;
 import jonelo.jacksum.concurrent.CustomHashFormat;
 import jonelo.jacksum.concurrent.Encoding;
 import jonelo.jacksum.concurrent.HashFormat;
+import jonelo.jacksum.util.Service;
+import jonelo.sugar.util.BubbleBabble;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -130,21 +132,21 @@ public class FormatTest {
                 0,
                 0);
 
-        if(!expected.equals(value)){
-            
-            if(expected.length() != value.length()){
-                System.out.println("LENGTHS!!! expected: "+expected.length()+" - actual: "+value.length());
-            }else{
-            
-            for(int i=0; i<expected.length();i++){
-                if(expected.charAt(i)!= value.charAt(i)){
-                    System.out.println("char "+i);
+        if (!expected.equals(value)) {
+
+            if (expected.length() != value.length()) {
+                System.out.println("LENGTHS!!! expected: " + expected.length() + " - actual: " + value.length());
+            } else {
+
+                for (int i = 0; i < expected.length(); i++) {
+                    if (expected.charAt(i) != value.charAt(i)) {
+                        System.out.println("char " + i);
+                    }
                 }
             }
-            }
-            
-           System.out.println("Expected: " + expected);
-           System.out.println("Value:    " + value);
+
+            System.out.println("Expected: " + expected);
+            System.out.println("Value:    " + value);
         }
         assertEquals(expected, value);
     }
@@ -158,12 +160,11 @@ public class FormatTest {
 
         final String justFile = new File(filename).getName();
         final String justPath = new File(filename).getParent();
-        
-        
-        String expected = "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ md5 (md5) tiene valor \"994664f1ddc7745252f02ac9311c7d29\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
-                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ sha1 (sha1) tiene valor \"4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
-                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ crc32 (crc32) tiene valor \"cfd36125\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
-                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 "+justPath+File.separator+justFile+" "+justFile+" "+justPath+" $$ 2921017 $$ xor8 (xor8) tiene valor \"a0\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n";
+
+        String expected = "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 " + justPath + File.separator + justFile + " " + justFile + " " + justPath + " $$ 2921017 $$ md5 (md5) tiene valor \"994664f1ddc7745252f02ac9311c7d29\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
+                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 " + justPath + File.separator + justFile + " " + justFile + " " + justPath + " $$ 2921017 $$ sha1 (sha1) tiene valor \"4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
+                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 " + justPath + File.separator + justFile + " " + justFile + " " + justPath + " $$ 2921017 $$ crc32 (crc32) tiene valor \"cfd36125\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n"
+                + "Hola md5+sha1+crc32+xor8 994664f1ddc7745252f02ac9311c7d294a0af6fb7950d1bfc4883026cfac4bca5b6d6a91cfd36125a0 " + justPath + File.separator + justFile + " " + justFile + " " + justPath + " $$ 2921017 $$ xor8 (xor8) tiene valor \"a0\" chau.4a0af6fb7950d1bfc4883026cfac4bca5b6d6a91 994664f1ddc7745252f02ac9311c7d29 md5 xor8\n";
 
         HashFormat hashFormat = new CustomHashFormat(format, Encoding.HEX, 0, '.', " ", "yyyyMMddHHmmss");
 
@@ -175,9 +176,61 @@ public class FormatTest {
                 0);
 
         //  System.out.println("Expected: " + expected);
-      //    System.out.println("Value:    " + value);
+        //    System.out.println("Value:    " + value);
         assertEquals(expected, value);
 
+    }
+
+    @Test
+    public void encodings() {
+
+        byte[] bytes = "Hola como va muy bien.".getBytes();
+
+        String expected = "start" + BubbleBabble.encode(bytes);
+        StringBuilder sb = new StringBuilder();
+        sb.append("start");
+        BubbleBabble.encode(bytes, sb);
+        String actual = sb.toString();
+
+        assertEquals(expected, actual);
+        
+        
+        expected = "start" + Service.format(bytes, true, 3, '.');
+        sb = new StringBuilder();
+        sb.append("start");
+        Service.format(bytes, true, 3, '.', sb);
+        actual = sb.toString();
+        
+        assertEquals(expected, actual);
+        
+        
+        expected = "start" + Service.format(bytes, false, 0, ' ');
+        sb = new StringBuilder();
+        sb.append("start");
+        Service.format(bytes, false, 0, ' ', sb);
+        actual = sb.toString();
+        
+        assertEquals(expected, actual);
+        
+        
+        expected = "start" + Service.format(bytes, false, 1, 'ñ');
+        sb = new StringBuilder();
+        sb.append("start");
+        Service.format(bytes, false, 1, 'ñ', sb);
+        actual = sb.toString();
+        
+        assertEquals(expected, actual);
+        
+        
+        expected = "start" + Service.formatAsBits(bytes);
+        sb = new StringBuilder();
+        sb.append("start");
+        Service.formatAsBits(bytes, sb);
+        actual = sb.toString();
+        
+        assertEquals(expected, actual);
+        
+        
     }
 
     private List<byte[]> getByteArraysWithFile(String filename, String timestampformat, Algorithm... algorithms) {

@@ -37,10 +37,11 @@ public class SimpleHashFormat extends HashFormat {
         StringBuilder sb = new StringBuilder(100);
         this.getEncoding().encode(this.getGroup(), this.getGroupChar(), joinByteArrays(byteArrays), sb);
 
+        sb.append(this.getSeparator())
+                .append(fileSize);
+
         if (filename != null) {
-            sb.append(this.getSeparator())
-                    .append(fileSize)
-                    .append(this.getSeparator());
+            sb.append(this.getSeparator());
             if (this.getTimeStampFormat() != null) {
                 sb.append(new SimpleDateFormat(this.getTimeStampFormat()).format(new Date(timestamp)))
                         .append(this.getSeparator());

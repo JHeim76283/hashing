@@ -30,17 +30,19 @@ public class JacksumReport {
 
         private String name;
         private String value;
+        private long length;
 
         public JacksumHashLine() {
         }
 
-        public JacksumHashLine(String value) {
-            this("", value);
+        public JacksumHashLine(String value, long length) {
+            this("", value, length);
         }
 
-        public JacksumHashLine(String name, String value) {
+        public JacksumHashLine(String name, String value, long length) {
             this.name = name;
             this.value = value;
+            this.length = length;
         }
 
         public String getName() {
@@ -59,13 +61,22 @@ public class JacksumReport {
             this.value = value;
         }
 
+        public long getLength() {
+            return length;
+        }
+
+        public void setLength(long length) {
+            this.length = length;
+        }
+        
+
     }
 
     private List<String> algorithms;
     private boolean alternative;
     private String encoding;
     private int hexaGroupSize;
-    private String hexaGroupSeparatorChar;
+    private char hexaGroupSeparatorChar;
     private char pathSeparator;
     private List<JacksumHashLine> hashes = new ArrayList<>();
 
@@ -101,11 +112,11 @@ public class JacksumReport {
         this.hexaGroupSize = hexaGroupSize;
     }
 
-    public String getHexaGroupSeparatorChar() {
+    public char getHexaGroupSeparatorChar() {
         return hexaGroupSeparatorChar;
     }
 
-    public void setHexaGroupSeparatorChar(String hexaGroupSeparatorChar) {
+    public void setHexaGroupSeparatorChar(char hexaGroupSeparatorChar) {
         this.hexaGroupSeparatorChar = hexaGroupSeparatorChar;
     }
 
@@ -125,11 +136,11 @@ public class JacksumReport {
         this.hashes = hashes;
     }
 
-    public void addLine(String filename, String hashValue) {
-        this.hashes.add(new JacksumHashLine(filename, hashValue));
+    public void addLine(String filename, String hashValue, long length) {
+        this.hashes.add(new JacksumHashLine(filename, hashValue, length));
     }
 
-    public void addLine(String hashValue) {
-        this.hashes.add(new JacksumHashLine(hashValue));
+    public void addLine(String hashValue, long length) {
+        this.hashes.add(new JacksumHashLine(hashValue, length));
     }
 }

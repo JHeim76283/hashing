@@ -17,6 +17,8 @@
  */
 package jonelo.jacksum.concurrent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -186,6 +188,43 @@ public class Jacksum2Cli {
 
     }
 
+    private void buildQuickReport(JacksumReport report, HashFormat simpleFormat) {
+        final byte[] bytes = QuickSequenceType.decodeQuickSequence(this.quickSequence);
+
+        final Map<Algorithm, byte[]> results = new ConcurrentHasher().hashBytes(
+                bytes,
+                this.algorithms,
+                this.alternative,
+                GENERIC_CRC_SPECS);
+
+        report.addLine(
+                simpleFormat.format(
+                        algorithms,
+                        this.algorithms.stream().map(algo -> results.get(algo)).collect(Collectors.toList())),
+                bytes.length);
+    }
+
+    private void buildFilesReport(JacksumReport report, HashFormat simpleFormat) throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
+        final List<Path> allFiles = new ArrayList<>();
+        final Map<Path, Long> fileSizes = new ConcurrentHashMap<>();
+        final Map<Path, Long> fileLastModified = new ConcurrentHashMap<>();
+        this.loadFilesToHash(allFiles, fileSizes, fileLastModified);
+        final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(allFiles,
+                this.algorithms,
+                this.alternative,
+                GENERIC_CRC_SPECS);
+
+        for (Path fn : allFiles) {
+            report.addLine(
+                    fn.toString(),
+                    simpleFormat.format(
+                            algorithms,
+                            this.algorithms.stream().map(algo -> results.get(new Pair<>(fn, algo))).collect(Collectors.toList())),
+                    fileSizes.get(fn));
+
+        }
+    }
+
     public int printResults() {
         try {
 
@@ -195,6 +234,37 @@ public class Jacksum2Cli {
             }
 
             this.initOutput();
+
+            if (this.isPrintMetainfo()) {
+
+                final HashFormat simpleFormat = new SimpleHashFormat(this.getEncoding(), this.getHexaGroupSize(), this.getHexaGroupSeparatorChar(), null);
+
+                final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+
+                final JacksumReport report = new JacksumReport();
+                report.setAlgorithms(this.algorithms.stream().map(algo -> algo.getCanonicalName()).collect(Collectors.toList()));
+                report.setAlternative(this.alternative);
+                report.setEncoding(this.getEncoding().getValue());
+                report.setHexaGroupSeparatorChar(this.hexaGroupSeparatorChar);
+                report.setHexaGroupSize(this.hexaGroupSize);
+                report.setPathSeparator(this.pathSeparator);
+
+                if (this.quickSequence != null) {
+
+                    this.buildQuickReport(report, simpleFormat);
+
+                    mapper.writeValue(this.out, report);
+
+                    return OK;
+                }
+                //process files
+                this.buildFilesReport(report, simpleFormat);
+
+                mapper.enable(SerializationFeature.INDENT_OUTPUT).writeValue(this.out, report);
+
+                return OK;
+
+            }
 
             if (this.quickSequence != null) {
                 this.out.println(this.getFormattedQuickHash());
@@ -214,32 +284,26 @@ public class Jacksum2Cli {
     }
 
     public String getFormattedQuickHash() {
-
+        final byte[] bytes = QuickSequenceType.decodeQuickSequence(this.quickSequence);
         final Map<Algorithm, byte[]> results = new ConcurrentHasher().hashBytes(
-                QuickSequenceType.decodeQuickSequence(this.quickSequence),
+                bytes,
                 this.algorithms,
                 this.alternative,
                 GENERIC_CRC_SPECS);
 
         return this.getHashFormat().format(this.algorithms,
-                this.algorithms.stream().map(algo -> results.get(algo)).collect(Collectors.toList()));
-
+                this.algorithms.stream().map(algo -> results.get(algo)).collect(Collectors.toList()), bytes.length);
     }
 
-    public List<String> getFormattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
-
-        final List<Path> allFiles = new ArrayList<>();
+    private void loadFilesToHash(List<Path> allFiles,
+            Map<Path, Long> fileSizes,
+            Map<Path, Long> fileLastModified) throws IOException {
 
         final int maxDepth = this.recursive ? Integer.MAX_VALUE : 1;
-
         final FileSystem fs = FileSystems.getDefault();
-
         final FileVisitOption[] options = this.ignoreSymbolicLinksToDirectories
                 ? new FileVisitOption[0]
                 : new FileVisitOption[]{FileVisitOption.FOLLOW_LINKS};
-
-        final Map<Path, Long> fileSizes = new ConcurrentHashMap<>();
-        final Map<Path, Long> fileLastModified = new ConcurrentHashMap<>();
 
         for (String filename : this.filenames) {
             Files.walk(fs.getPath(filename), maxDepth, options)
@@ -256,6 +320,14 @@ public class Jacksum2Cli {
                     });
         }
 
+    }
+
+    public List<String> getFormattedFileHashes() throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
+        final List<Path> allFiles = new ArrayList<>();
+        final Map<Path, Long> fileSizes = new ConcurrentHashMap<>();
+        final Map<Path, Long> fileLastModified = new ConcurrentHashMap<>();
+
+        this.loadFilesToHash(allFiles, fileSizes, fileLastModified);
         final Map<Pair<Path, Algorithm>, byte[]> results = new ConcurrentHasher().hashFiles(allFiles,
                 this.algorithms,
                 this.alternative,
@@ -273,7 +345,6 @@ public class Jacksum2Cli {
                                 fileSizes.get(filename),
                                 fileLastModified.get(filename)))
                 .collect(Collectors.toList());
-
     }
 
     public List<Algorithm> getAlgorithms() {

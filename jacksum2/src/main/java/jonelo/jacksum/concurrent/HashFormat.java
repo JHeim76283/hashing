@@ -55,9 +55,18 @@ public abstract class HashFormat {
     
      public final String format(
             List<Algorithm> algorithms,
-            List<byte[]> byteArrays){
-         return this.format(algorithms, byteArrays, null, -1l, 0l);
+            List<byte[]> byteArrays, int length){
+         return this.format(algorithms, byteArrays, null, length, 0l);
      }
+     
+     public final String format(
+            List<Algorithm> algorithms,
+            List<byte[]> byteArrays){
+        StringBuilder sb = new StringBuilder(100);
+        this.getEncoding().encode(this.getGroup(), this.getGroupChar(), joinByteArrays(byteArrays), sb);
+        return sb.toString();
+     }
+     
 
     public abstract String format(
             List<Algorithm> algorithms,

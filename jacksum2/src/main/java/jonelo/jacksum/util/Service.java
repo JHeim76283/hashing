@@ -34,6 +34,7 @@ import jonelo.sugar.util.GeneralString;
 public class Service {
 
     private final static char[] HEX = "0123456789abcdef".toCharArray();
+    private final static char[] HEXUP = "0123456789ABCDEF".toCharArray();
 
     public static String right(long number, int blanks) {
         StringBuilder sb = new StringBuilder(number + "");
@@ -56,7 +57,7 @@ public class Service {
         return sb.toString();
     }
 
-    public static String hexformat(long value, int nibbles, int group, char groupChar) {
+   /* public static String hexformat(long value, int nibbles, int group, char groupChar) {
         StringBuilder sb = new StringBuilder(Long.toHexString(value));
         while (sb.length() < nibbles) {
             sb.insert(0, '0');
@@ -66,13 +67,13 @@ public class Service {
             sb = insertBlanks(sb, group, groupChar);
         }
         return sb.toString();
-    }
+    }*/
 
     public static String format(byte[] bytes) {
         return format(bytes, false);
     }
 
-    private static StringBuilder insertBlanks(StringBuilder sb, int group, char groupChar) {
+ /*   private static StringBuilder insertBlanks(StringBuilder sb, int group, char groupChar) {
         int bytecount = sb.length() / 2; // we expect a hex string
         if (bytecount <= group) {
             return sb; // avoid unnecessary action
@@ -88,23 +89,52 @@ public class Service {
         }
         return sb2;
 
-    }
+    }*/
 
     public static String format(byte[] bytes, boolean uppercase, int group, char groupChar) {
         if (bytes == null) {
             return "";
         }
+        
         StringBuilder sb = new StringBuilder(bytes.length * 2);
         int b;
+        final char[] digits = uppercase ? HEXUP : HEX;
         for (int i = 0; i < bytes.length; i++) {
             b = bytes[i] & 0xFF;
-            sb.append(HEX[b >>> 4]);
-            sb.append(HEX[b & 0x0F]);
+            sb.append(digits[b >>> 4]);
+            sb.append(digits[b & 0x0F]);
+            if (group > 0 && i % group == 0) {
+                sb.append(groupChar);
+            }
         }
-        if (group > 0) {
-            sb = insertBlanks(sb, group, groupChar);
+
+        return sb.toString();
+    }
+
+    public static void format(byte[] bytes, boolean uppercase, int group, char groupChar, StringBuilder sb) {
+        if (bytes != null) {
+            final char[] digits = uppercase ? HEXUP : HEX;
+            int b;
+            for (int i = 0; i < bytes.length; i++) {
+                b = bytes[i] & 0xFF;
+                sb.append(digits[b >>> 4]);
+                sb.append(digits[b & 0x0F]);
+                if (group > 0 && i % group == 0) {
+                    sb.append(groupChar);
+                }
+            }
         }
-        return (uppercase ? sb.toString().toUpperCase() : sb.toString());
+    }
+
+    public static void formatAsBits(byte[] bytes, StringBuilder sb) {
+        if (bytes != null) {
+            final String binary = new BigInteger(1, bytes).toString(2);
+            final int count = bytes.length * 8;
+            for (int i = binary.length(); i < count; i++) {
+                sb.append('0');
+            }
+            sb.append(binary);
+        }
     }
 
     public static String formatAsBits(byte[] bytes) {
@@ -125,7 +155,7 @@ public class Service {
     }
 
     public static boolean isSymbolicLink(File file) {
-     // there are no symbolic links on Windows
+        // there are no symbolic links on Windows
         // on Windows a link is always a file
         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
             return false;

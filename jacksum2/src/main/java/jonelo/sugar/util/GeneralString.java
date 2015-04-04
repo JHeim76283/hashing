@@ -38,28 +38,10 @@
  */
 package jonelo.sugar.util;
 
-import java.io.File;
-import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import jonelo.jacksum.algorithm.AbstractChecksum;
-import static jonelo.jacksum.algorithm.AbstractChecksum.BASE16;
-import static jonelo.jacksum.algorithm.AbstractChecksum.BASE32;
-import static jonelo.jacksum.algorithm.AbstractChecksum.BASE64;
-import static jonelo.jacksum.algorithm.AbstractChecksum.BIN;
-import static jonelo.jacksum.algorithm.AbstractChecksum.BUBBLEBABBLE;
-import static jonelo.jacksum.algorithm.AbstractChecksum.DEC;
-import static jonelo.jacksum.algorithm.AbstractChecksum.HEX;
-import static jonelo.jacksum.algorithm.AbstractChecksum.HEX_UPPERCASE;
-import static jonelo.jacksum.algorithm.AbstractChecksum.OCT;
-import jonelo.jacksum.algorithm.Algorithm;
-import jonelo.jacksum.concurrent.Encoding;
-import jonelo.jacksum.util.Service;
+
 
 public class GeneralString {
 
@@ -245,7 +227,7 @@ public class GeneralString {
     /**
      * Converts encoded &#92;uxxxx to unicode chars
      */
-    public static String decodeEncodedUnicode(String string) {
+    /*public static String decodeEncodedUnicode(String string) {
         char c;
         int length = string.length();
         StringBuilder buffer = new StringBuilder(length);
@@ -293,12 +275,12 @@ public class GeneralString {
             }
         }
         return buffer.toString();
-    }
+    }*/
 
     /*
      * Converts unicodes to encoded &#92;uxxxx
      */
-    public static String encodeUnicode(String string) {
+    /*public static String encodeUnicode(String string) {
         int length = string.length();
         StringBuilder buffer = new StringBuilder(length * 2);
 
@@ -345,7 +327,7 @@ public class GeneralString {
             }
         }
         return buffer.toString();
-    }
+    }*/
 
     public static String[] split(String str, String delimiter) {
         List<String> al = new ArrayList<>();

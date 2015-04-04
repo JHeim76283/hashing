@@ -24,7 +24,7 @@ import jonelo.sugar.util.Base32;
 import jonelo.sugar.util.BubbleBabble;
 
 /**
- * 
+ *
  * @author Federico Tello Gentile <federicotg@gmail.com>
  */
 public enum Encoding {
@@ -35,25 +35,33 @@ public enum Encoding {
                     return Service.formatAsBits(byteArray);
                 }
 
+                @Override
+                public void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb) {
+                    Service.formatAsBits(byteArray, sb);
+                }
+
             },
     DEC("dec") {
                 @Override
                 public String encode(int group, char groupChar, byte[] byteArray) {
                     return new BigInteger(1, byteArray).toString();
                 }
-
             },
     OCT("oct") {
                 @Override
                 public String encode(int group, char groupChar, byte[] byteArray) {
                     return new BigInteger(1, byteArray).toString(8);
                 }
-
             },
     HEX("hex") {
                 @Override
                 public String encode(int group, char groupChar, byte[] byteArray) {
                     return Service.format(byteArray, false, group, groupChar);
+                }
+
+                @Override
+                public void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb) {
+                    Service.format(byteArray, false, group, groupChar, sb);
                 }
 
             },
@@ -63,11 +71,21 @@ public enum Encoding {
                     return Service.format(byteArray, true, group, groupChar);
                 }
 
+                @Override
+                public void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb) {
+                    Service.format(byteArray, true, group, groupChar, sb);
+                }
+
             },
     BASE16("base16") {
                 @Override
                 public String encode(int group, char groupChar, byte[] byteArray) {
                     return Service.format(byteArray, true, 0, groupChar);
+                }
+
+                @Override
+                public void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb) {
+                    Service.format(byteArray, true, 0, groupChar, sb);
                 }
 
             },
@@ -90,6 +108,12 @@ public enum Encoding {
                 public String encode(int group, char groupChar, byte[] byteArray) {
                     return BubbleBabble.encode(byteArray);
                 }
+
+                @Override
+                public void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb) {
+                    BubbleBabble.encode(byteArray, sb);
+                }
+
             };
 
     private final String value;
@@ -104,8 +128,8 @@ public enum Encoding {
 
     public abstract String encode(int group, char groupChar, byte[] byteArray);
 
-    public final void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb){
+    public void encode(int group, char groupChar, byte[] byteArray, StringBuilder sb) {
         sb.append(this.encode(group, groupChar, byteArray));
     }
-    
+
 }

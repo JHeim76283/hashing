@@ -97,7 +97,15 @@ public class JacksumCLITest {
     public void quick() throws Exception {
          Jacksum2Cli app = this.getApp("-a", "md5", "-q", "txt:This is a test");
          String actual = app.getFormattedQuickHash();
-         assertEquals("ce114e4501d2f4e2dcea3e17b546f339", actual);
+         assertEquals("ce114e4501d2f4e2dcea3e17b546f339\t14", actual);
+    }
+    
+    //@Test
+    public void json() throws Exception {
+         Jacksum2Cli app = this.getApp("-a", "md5", "-m", "-q", "txt:This is a test");
+         app.printResults();
+         //String actual = app.getFormattedQuickHash();
+         //assertEquals("ce114e4501d2f4e2dcea3e17b546f339\t14", actual);
     }
     
     @Test(expected = CmdLineException.class)
