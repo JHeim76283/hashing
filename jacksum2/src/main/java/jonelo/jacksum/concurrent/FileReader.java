@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jonelo.jacksum.algorithm.Algorithm;
 
@@ -74,6 +75,14 @@ public class FileReader implements Runnable {
                 }
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(FileReader.class.getName()).throwing("FileReader", "run", ex);
+                try {
+                    for (Algorithm algorithm : this.algorithms) {
+
+                        this.dataQueueMap.get(new Pair<>(filename, algorithm)).put(new DataBlock(null, -1));
+                    }
+                } catch (InterruptedException iEx) {
+                    Logger.getLogger(FileReader.class.getName()).throwing("FileReader", "run", iEx);
+                }
             }
 
             filename = this.filenameSource.poll();

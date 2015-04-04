@@ -176,7 +176,7 @@ public class JacksumCLITest {
         assertNull(app.getOutputFile());
         assertNull(app.getOverwriteErrorFileName());
         assertNull(app.getOverwriteOutputFile());
-        assertEquals(File.pathSeparatorChar, app.getPathSeparator());
+        assertEquals(File.separatorChar, app.getSeparator());
         assertNull(app.getPrefixToIgnoreInFilenames());
         assertNull(app.getQuickSequence());
         assertNull(app.getVerbosity());

@@ -118,7 +118,7 @@ public class Jacksum2Cli {
     private boolean printMetainfo;
 
     @Option(name = "-P", metaVar = "char")
-    private char pathSeparator = File.pathSeparatorChar;
+    private char separator = File.separatorChar;
 
     @Option(name = "-q")
     private String quickSequence;
@@ -245,7 +245,7 @@ public class Jacksum2Cli {
                 report.setEncoding(this.getEncoding().getValue());
                 report.setHexaGroupSeparatorChar(this.hexaGroupSeparatorChar);
                 report.setHexaGroupSize(this.hexaGroupSize);
-                report.setPathSeparator(this.pathSeparator);
+                report.setPathSeparator(this.separator);
 
                 if (this.quickSequence != null) {
 
@@ -419,8 +419,8 @@ public class Jacksum2Cli {
         return printMetainfo;
     }
 
-    public char getPathSeparator() {
-        return pathSeparator;
+    public char getSeparator() {
+        return separator;
     }
 
     public String getQuickSequence() {

@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import jonelo.jacksum.algorithm.AbstractChecksum;
 import jonelo.jacksum.algorithm.Algorithm;
@@ -74,11 +75,13 @@ public class HashingTask implements Runnable {
                     ? this.algorithm.getChecksumInstance(this.alternate)
                     : this.algorithm.getChecksumInstance(this.crcSpec, this.alternate);
             //JacksumAPI.getChecksumInstance(this.algorithm.getCanonicalName());
-            DataBlock data = this.dataBlockSource.take();
-            while (data.isNotLast()) {
+            //DataBlock data = this.dataBlockSource.take();
+            DataBlock data = this.dataBlockSource.poll(1, TimeUnit.MINUTES);
+            while (data != null && data.isNotLast()) {
                 //   log("processing one block "+this.filename+" "+this.algorithm.getCanonicalName());
                 data.updateChecksum(this.checksum);
-                data = this.dataBlockSource.take();
+                //data = this.dataBlockSource.take();
+                data = this.dataBlockSource.poll(1, TimeUnit.MINUTES);
             }
 
             // log("Saving one result " +this.filename+" "+this.algorithm.getCanonicalName());
